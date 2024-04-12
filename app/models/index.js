@@ -22,10 +22,7 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // Import model yang dibutuhkan
-db.tentang = require("./Tentang.js")(sequelize, Sequelize);
 db.layanan = require("./Layanan.js")(sequelize, Sequelize);
-db.transaksi = require("./Transaksi.js")(sequelize, Sequelize);
-db.testimoni = require("./Testimoni.js")(sequelize, Sequelize);
 db.administrators = require("./Administrators.js")(sequelize, Sequelize);
 db.order = require("./Order.js")(sequelize, Sequelize);
 
