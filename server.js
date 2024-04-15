@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const app = express();
 app.use("/layanan", express.static("public/assets/images/layanan")); //masukkan public direktori
+app.use("/barangdistributor", express.static("public/assets/images/barangdistributor"));
 app.use(cors());
 
 const db = require("./app/models");
@@ -37,6 +38,7 @@ require("./app/routes/administrators")(app);
 require("./app/routes/auth")(app);
 require("./app/routes/order")(app);
 require("./app/routes/satuan")(app);
+require("./app/routes/barangdistributor")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 5000;

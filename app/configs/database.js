@@ -10,5 +10,5 @@ module.exports = {
     acquire: 30000,
     idle: 10000,
   },
-  JWT_SECRET: "izinaaja",
+  JWT_SECRET: "klinik_dayalisna",
 };
