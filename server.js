@@ -16,7 +16,7 @@ db.sequelize
   });
 
   const corsOptions = {
-    origin: ["https://ngurusizin.online", "http://localhost:3000"],
+    origin: ["https://ngurusizin.online", "http://localhost:5000"],
   };
 
 app.use(cors(corsOptions));
@@ -36,6 +36,7 @@ require("./app/routes/layanan")(app);
 require("./app/routes/administrators")(app);
 require("./app/routes/auth")(app);
 require("./app/routes/order")(app);
+require("./app/routes/satuan")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 5000;
