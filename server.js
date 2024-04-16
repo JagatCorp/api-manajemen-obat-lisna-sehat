@@ -17,7 +17,7 @@ db.sequelize
   });
 
   const corsOptions = {
-    origin: ["https://ngurusizin.online", "http://localhost:3000"],
+    origin: ["https://ngurusizin.online", "http://localhost:5000"],
   };
 
 app.use(cors(corsOptions));
@@ -37,6 +37,7 @@ require("./app/routes/layanan")(app);
 require("./app/routes/administrators")(app);
 require("./app/routes/auth")(app);
 require("./app/routes/order")(app);
+require("./app/routes/satuan")(app);
 require("./app/routes/barangdistributor")(app);
 require("./app/routes/pembelidistributor")(app);
 require("./app/routes/pasien")(app);
