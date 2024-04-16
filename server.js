@@ -38,6 +38,9 @@ require("./app/routes/administrators")(app);
 require("./app/routes/auth")(app);
 require("./app/routes/order")(app);
 require("./app/routes/barangdistributor")(app);
+require("./app/routes/pembelidistributor")(app);
+require("./app/routes/pasien")(app);
+require("./app/routes/transaksidistributor")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 5000;

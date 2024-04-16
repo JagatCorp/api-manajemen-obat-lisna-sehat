@@ -26,10 +26,18 @@ db.layanan = require("./Layanan.js")(sequelize, Sequelize);
 db.administrators = require("./Administrators.js")(sequelize, Sequelize);
 db.order = require("./Order.js")(sequelize, Sequelize);
 db.barangdistributors = require("./Barangdistributor.js")(sequelize, Sequelize);
+db.pembelidistributors = require("./Pembelidistributor.js")(sequelize, Sequelize);
+db.pasien = require("./Pasien.js")(sequelize, Sequelize);
+db.transaksidistributors = require("./Transaksidistributor.js")(sequelize, Sequelize);
 
 
 // relasi table order ke layanan
 db.order.belongsTo(db.layanan, { foreignKey: 'layananId' });
+// relasi table transaksidistributors ke barangdistributors
+db.transaksidistributors.belongsTo(db.barangdistributors, { foreignKey: 'barang_distributorId' });
+// relasi table transaksidistributors ke pembelidistributors
+db.transaksidistributors.belongsTo(db.pembelidistributors, { foreignKey: 'pembeli_distributorId' });
+
 
 // Sinkronkan model dengan database
 sequelize
