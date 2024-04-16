@@ -49,68 +49,47 @@ exports.create = async (req, res) => {
     res.send(createdTransaksidistributor);
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .send({
-        message: error.message || "Error creating transaksidistributor.",
-      });
+    res.status(500).send({
+      message: error.message || "Error creating transaksidistributor.",
+    });
   }
 };
 
-// Serialize
-const transaksidistributorSerializer = new JSONAPISerializer("transaksidistributor", {
-    attributes: ["jml_barang", "Barangdistributor", "Pembelidistributors"],
-   
-    keyForAttribute: "underscore_case",
-  });
 // code benar tapi salah
 exports.findAll = async (req, res) => {
   try {
-    // Mendapatkan nilai halaman dan ukuran halaman dari query string (default ke halaman 1 dan ukuran 10 jika tidak disediakan)
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
-
-    // Menghitung offset berdasarkan halaman dan ukuran halaman
     const offset = (page - 1) * pageSize;
 
-    const keyword = req.query.keyword || "";
-
-    // Query pencarian
+    // Jika tidak ada query pencarian
     const searchQuery = {
-      where: {
-        [Op.or]: [{ jml_barang: { [Op.like]: `%${keyword}%` } }],
-      },
       limit: pageSize,
       offset: offset,
       include: [
         {
           model: Barangdistributor,
-        attributes: ["nama_barang"],
+          attributes: ["nama_barang"],
         },
         {
           model: Pembelidistributors,
-        attributes: ["nama_pembeli"],
+          attributes: ["nama_pembeli"],
         },
       ],
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
     };
 
     const transaksidistributor = await Transaksidistributor.findAll(
       searchQuery
     );
-    const totalCount = await Transaksidistributor.count(searchQuery);
-    // Menghitung total jumlah transaksidistributor
-    // const totalCount = await Transaksidistributor.count();
+    const totalCount = await Transaksidistributor.count();
 
-    // Menghitung total jumlah halaman berdasarkan ukuran halaman
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    // Menggunakan serializer untuk mengubah data menjadi JSON
-    const transaksidistributors =
-      transaksidistributorSerializer.serialize(transaksidistributor);
-
-    // Kirim response dengan data JSON dan informasi pagination
     res.send({
-      data: transaksidistributors,
+      data: transaksidistributor,
       currentPage: page,
       totalPages: totalPages,
       pageSize: pageSize,

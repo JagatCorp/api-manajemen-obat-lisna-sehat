@@ -1,11 +1,10 @@
-import db from "../models";
-const { satuan: Satuan } = db;
+const db = require("../models");
+const Satuan = db.satuan;
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
-// const adminSerializer = require("../serializers/admin");
-import { Serializer as JSONAPISerializer } from "jsonapi-serializer";
+const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
-import { Op } from "sequelize";
+const { Op } = require("sequelize");
 
 // Create and Save a new satuan
 exports.create = async (req, res) => {
@@ -40,7 +39,9 @@ exports.create = async (req, res) => {
     res.send(createdSatuan);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: error.message || "Error creating satuan." });
+    res
+      .status(500)
+      .send({ message: error.message || "Error creating satuan." });
   }
 };
 
@@ -65,17 +66,15 @@ exports.findAll = async (req, res) => {
     // Query pencarian
     const searchQuery = {
       where: {
-        [Op.or]: [
-          { nama_instansi: { [Op.like]: `%${keyword}%` } },
-        ],
+        [Op.or]: [{ nama_instansi: { [Op.like]: `%${keyword}%` } }],
       },
       limit: pageSize,
       offset: offset,
     };
 
     // Jika role adalah 'merchant', tambahkan kondisi status
-    if (role == 'merchant') {
-      searchQuery.where.status = { [Op.like]: '%on process%' };
+    if (role == "merchant") {
+      searchQuery.where.status = { [Op.like]: "%on process%" };
     }
 
     const satuan = await Satuan.findAll(searchQuery);
@@ -97,7 +96,7 @@ exports.findAll = async (req, res) => {
       totalPages: totalPages,
       pageSize: pageSize,
       totalCount: totalCount,
-      role: req.query.role
+      role: req.query.role,
     });
   } catch (error) {
     console.error(error);
