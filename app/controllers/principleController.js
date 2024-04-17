@@ -1,37 +1,37 @@
 const db = require("../models");
-const Satuan = db.satuan;
+const Principle = db.principle;
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
 const { Op } = require("sequelize");
 
-// Create and Save a new satuan
+// Create and Save a new principle
 exports.create = async (req, res) => {
   try {
     // Validate request
     if (
-      !req.body.nama_satuan
+      !req.body.nama_instansi
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
 
-    // Create satuan object with layanan_id
-    const satuan = {
-      nama_satuan: req.body.nama_satuan,
+    // Create principle object with layanan_id
+    const principle = {
+      nama_instansi: req.body.nama_instansi,
     };
 
-    // Save satuan to the database
-    const createdSatuan = await Satuan.create(satuan);
-    res.send(createdSatuan);
+    // Save principle to the database
+    const createdPrinciple = await Principle.create(principle);
+    res.send(createdPrinciple);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: error.message || "Error creating satuan." });
+    res.status(500).send({ message: error.message || "Error creating principle." });
   }
 };
 
-const satuanSerializer = new JSONAPISerializer('satuan', {
-  attributes: ['nama_satuan'],
+const principleSerializer = new JSONAPISerializer('principle', {
+  attributes: ['nama_instansi'],
   keyForAttribute: 'underscore_case',
 });
 
@@ -50,26 +50,26 @@ exports.findAll = async (req, res) => {
     const searchQuery = {
       where: {
         [Op.or]: [
-          { nama_satuan: { [Op.like]: `%${keyword}%` } },
+          { nama_instansi: { [Op.like]: `%${keyword}%` } },
         ],
       },
       limit: pageSize,
       offset: offset,
     };
 
-    const satuan = await Satuan.findAll(searchQuery);
-    const totalCount = await Satuan.count(searchQuery);
-    // Menghitung total jumlah satuan
-    // const totalCount = await Satuan.count();
+    const principle = await Principle.findAll(searchQuery);
+    const totalCount = await Principle.count(searchQuery);
+    // Menghitung total jumlah principle
+    // const totalCount = await Principle.count();
 
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const satuanData = satuanSerializer.serialize(satuan);
+    const principleData = principleSerializer.serialize(principle);
     
     // Kirim response dengan data JSON dan informasi pagination
     res.send({
-      data: satuanData,
+      data: principleData,
       currentPage: page,
       totalPages: totalPages,
       pageSize: pageSize,
@@ -77,7 +77,7 @@ exports.findAll = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Error retrieving satuans." });
+    res.status(500).send({ message: "Error retrieving principles." });
   }
 };
 
@@ -87,90 +87,90 @@ exports.findOne = async (req, res) => {
   const id = req.params.id;
   
   try {
-    const satuan = await Satuan.findByPk(id);
+    const principle = await Principle.findByPk(id);
     
-    if (!satuan) {
+    if (!principle) {
       return res.status(404).send({
-        message: `Cannot find satuan with id=${id}.`,
+        message: `Cannot find principle with id=${id}.`,
       });
     }
 
-    const serializedSatuan = satuanSerializer.serialize(satuan);
+    const serializedPrinciple = principleSerializer.serialize(principle);
     
-    res.send(serializedSatuan);
+    res.send(serializedPrinciple);
   } catch (error) {
     console.error(error);
     res.status(500).send({
-      message: `Error retrieving satuan with id=${id}`,
+      message: `Error retrieving principle with id=${id}`,
     });
   }
 };
 
-// Update a satuan by the id in the request
+// Update a principle by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
 
-  Satuan.update(req.body, {
+  Principle.update(req.body, {
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "satuan was updated successfully.",
+          message: "principle was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update satuan with id=${id}. Maybe satuan was not found or req.body is empty!`,
+          message: `Cannot update principle with id=${id}. Maybe principle was not found or req.body is empty!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: "Error updating satuan with id=" + id,
+        message: "Error updating principle with id=" + id,
       });
     });
 };
 
-// Delete a satuan with the specified id in the request
+// Delete a principle with the specified id in the request
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  Satuan.destroy({
+  Principle.destroy({
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "satuan was deleted successfully!",
+          message: "principle was deleted successfully!",
         });
       } else {
         res.send({
-          message: `Cannot delete satuan with id=${id}. Maybe satuan was not found!`,
+          message: `Cannot delete principle with id=${id}. Maybe principle was not found!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: "Could not delete satuan with id=" + id,
+        message: "Could not delete principle with id=" + id,
       });
     });
 };
 
-// Delete all satuans from the database.
+// Delete all principles from the database.
 exports.deleteAll = (req, res) => {
-  Satuan.destroy({
+  Principle.destroy({
     where: {},
     truncate: false,
   })
     .then((nums) => {
       res.send({
-        message: `${nums} satuans were deleted successfully!`,
+        message: `${nums} principles were deleted successfully!`,
       });
     })
     .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while removing all satuans.",
+          err.message || "Some error occurred while removing all principles.",
       });
     });
 };

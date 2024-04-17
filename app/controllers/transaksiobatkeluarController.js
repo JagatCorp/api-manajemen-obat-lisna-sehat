@@ -55,6 +55,9 @@ exports.findAll = async (req, res) => {
       },
       limit: pageSize,
       offset: offset,
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
     };
 
     const satuan = await Satuan.findAll(searchQuery);

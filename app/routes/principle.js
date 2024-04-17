@@ -1,29 +1,29 @@
 module.exports = (app) => {
-    const satuan = require("../controllers/satuanController");
+    const principle = require("../controllers/principleController");
   
     var router = require("express").Router();
   
     // Create a new Tutorial
-    router.post("/", satuan.create);
+    router.post("/", principle.create);
   
     // Retrieve all Tutorials
-    router.get("/", satuan.findAll);
+    router.get("/", principle.findAll);
   
     // Retrieve all published satuan
     // router.get("/published", order.findAllPublished);
   
     // Retrieve a single Tutorial with id
-    router.get("/:id", satuan.findOne);
+    router.get("/:id", principle.findOne);
   
     // Update a Tutorial with id
-    router.put("/:id", satuan.update);
+    router.put("/:id", principle.update);
   
     // Delete a Tutorial with id
-    router.delete("/:id", satuan.delete);
+    router.delete("/:id", principle.delete);
   
     // Delete all satuan
-    router.delete("/", satuan.deleteAll);
+    router.delete("/", principle.deleteAll);
   
-    app.use("/api/satuan", router);
+    app.use("/api/principle", router);
   };
   

@@ -23,14 +23,26 @@ db.sequelize = sequelize;
 
 // Import model yang dibutuhkan
 db.satuan = require("./Satuan.js")(sequelize, Sequelize);
+db.obat = require("./Obat.js")(sequelize, Sequelize);
 db.layanan = require("./Layanan.js")(sequelize, Sequelize);
+db.transaksi_obat_keluar = require("./TransaksiObatKeluar.js")(sequelize, Sequelize);
+db.transaksi_obat_masuk = require("./TransaksiObatMasuk.js")(sequelize, Sequelize);
+db.principle = require("./Principle.js")(sequelize, Sequelize);
 db.administrators = require("./Administrators.js")(sequelize, Sequelize);
 db.order = require("./Order.js")(sequelize, Sequelize);
 db.barangdistributors = require("./Barangdistributor.js")(sequelize, Sequelize);
 
 
 // relasi table order ke layanan
-// db.order.belongsTo(db.layanan, { foreignKey: 'layananId' });
+db.order.belongsTo(db.layanan, { foreignKey: 'layananId' });
+
+db.obat.belongsTo(db.satuan, { as: 'satuan_box', foreignKey: 'satuan_box_id' });
+db.obat.belongsTo(db.satuan, { as: 'satuan_sat', foreignKey: 'satuan_sat_id' });
+
+db.transaksi_obat_keluar.belongsTo(db.obat, { foreignKey: 'obat_id' });
+
+db.transaksi_obat_masuk.belongsTo(db.obat, { foreignKey: 'obat_id' });
+db.transaksi_obat_masuk.belongsTo(db.principle, { foreignKey: 'principle_id' });
 
 // Sinkronkan model dengan database
 sequelize
