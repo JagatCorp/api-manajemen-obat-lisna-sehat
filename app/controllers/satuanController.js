@@ -26,7 +26,9 @@ exports.create = async (req, res) => {
     res.send(createdSatuan);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: error.message || "Error creating satuan." });
+    res
+      .status(500)
+      .send({ message: error.message || "Error creating satuan." });
   }
 };
 
