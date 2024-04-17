@@ -37,7 +37,7 @@ exports.create = async (req, res) => {
     const newBarangdistributor = await Barangdistributor.create(
       barangdistributor
     );
-    res.status(201).send(newBarangdistributor); // Atau respons yang diinginkan
+    res.status(200).send(newBarangdistributor); // Atau respons yang diinginkan
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
