@@ -40,6 +40,8 @@ require("./app/routes/auth")(app);
 require("./app/routes/order")(app);
 require("./app/routes/satuan")(app);
 require("./app/routes/obat")(app);
+require("./app/routes/dokter")(app);
+require("./app/routes/spesialisdokter")(app);
 require("./app/routes/barangdistributor")(app);
 require("./app/routes/transaksiobatkeluar")(app);
 require("./app/routes/transaksiobatmasuk")(app);

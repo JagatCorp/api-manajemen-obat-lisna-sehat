@@ -1,5 +1,5 @@
 const db = require("../models");
-const Satuan = db.satuan;
+const TransaksiObatKeluar = db.transaksi_obat_keluar;
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
