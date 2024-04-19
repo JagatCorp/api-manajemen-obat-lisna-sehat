@@ -1,44 +1,9 @@
 const db = require("../models");
 const Dokter = db.dokter;
-const SpesialisDokter = db.spesialisdokters;
+const SpesialisDokter = db.spesialisdokter;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 const dokterMiddleware = require("../middleware/dokter"); // Import middleware dokter
 const { Op } = require("sequelize");
-
-// Create and Save a new dokter
-// exports.create = async (req, res) => {
-//   try {
-//     // Validate request
-//     const requiredFields = ['nama_dokter', 'mulai_praktik', 'selesai_praktik', 'hari_praktik', 'spesialis_dokter_id'];
-//     const missingFields = requiredFields.filter(field => !req.body[field]);
-
-//     if (missingFields.length > 0) {
-//       return res.status(400).send({ message: `Data is required for the following fields: ${missingFields.join(', ')}` });
-//     }
-
-//     const spesialis_dokter = await SpesialisDokter.findByPk(req.body.spesialis_dokter_id);
-//     if (!spesialis_dokter) {
-//       return res.status(404).send({ message: "spesialis_dokter not found!" });
-//     }
-
-//     // Create dokter object with layanan_id
-//     const dokter = {
-//       nama_dokter: req.body.nama_dokter,
-//       mulai_praktik: req.body.mulai_praktik,
-//       selesai_praktik: req.body.selesai_praktik,
-//       hari_praktik: req.body.hari_praktik,
-//       spesialis_dokter_id: req.body.spesialis_dokter_id,
-//     //   gambar_dokter: req.file.path // Menyimpan path file gambar
-//     };
-
-//     // Save dokter to the database
-//     const createdDokter = await Dokter.create(dokter);
-//     res.send(createdDokter);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send({ message: error.message || "Error creating dokter." });
-//   }
-// };
 
 exports.create = async (req, res) => {
   try {
@@ -67,9 +32,7 @@ exports.create = async (req, res) => {
 
     // Proses file gambar yang diunggah
     const imageName = req.file.filename;
-    const imageUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/assets/images/dokter/${imageName}`;
+    const imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
 
     // Cek apakah spesialis_dokter dengan id yang diberikan ada dalam database
     const spesialis_dokter = await SpesialisDokter.findByPk(
@@ -103,7 +66,6 @@ exports.create = async (req, res) => {
   }
 };
 
-// code benar tapi salah
 exports.findAll = async (req, res) => {
   try {
     // Mendapatkan nilai halaman dan ukuran halaman dari query string (default ke halaman 1 dan ukuran 10 jika tidak disediakan)
@@ -127,9 +89,6 @@ exports.findAll = async (req, res) => {
           attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
         },
       ],
-      attributes: {
-        exclude: ["createdAt", "updatedAt"],
-      },
     };
 
     const dokter = await Dokter.findAll(searchQuery);
@@ -150,7 +109,9 @@ exports.findAll = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Error retrieving dokters." });
+    res
+      .status(500)
+      .send({ message: error.message || "Error retrieving dokters." });
   }
 };
 
@@ -190,28 +151,124 @@ exports.findOne = async (req, res) => {
 
 // Update a dokter by the id in the request
 exports.update = async (req, res) => {
+  console.log(req.body); // Cek konsol untuk melihat data yang diterima dari form-data
   const id = req.params.id;
+  const {
+    nama_dokter,
+    mulai_praktik,
+    selesai_praktik,
+    hari_praktik,
+    spesialis_dokter_id,
+  } = req.body;
 
-  Dokter.update(req.body, {
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "dokter was updated successfully.",
+  // Menginisialisasi variabel untuk gambar
+  let imageName, imageUrl;
+
+  // Memeriksa apakah file telah diunggah
+  if (req.file) {
+    // Jika file diunggah, proses file gambar yang diunggah
+    imageName = req.file.filename;
+    imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
+  }
+
+  // Cek apakah spesialis_dokter_id sudah ada di req.body
+  // if (!spesialis_dokter_id) {
+  //   return res
+  //     .status(400)
+  //     .send({ message: "spesialis_dokter_id is required!" });
+  // }
+
+  // Memperbarui data dokter dalam database
+  Dokter.findByPk(id)
+    .then((dokter) => {
+      if (!dokter) {
+        res.status(404).send({
+          message: `Cannot update dokter with id=${id}. Dokter not found!`,
         });
       } else {
-        res.send({
-          message: `Cannot update dokter with id=${id}. Maybe dokter was not found or req.body is empty!`,
-        });
+        // Memperbarui data dokter dengan data yang diberikan
+        dokter.nama_dokter = nama_dokter;
+        dokter.mulai_praktik = mulai_praktik;
+        dokter.selesai_praktik = selesai_praktik;
+        dokter.hari_praktik = hari_praktik;
+        dokter.spesialis_dokter_id = spesialis_dokter_id;
+
+        // Menggunakan gambar baru jika ada, jika tidak, tetap menggunakan gambar lama
+        if (imageName && imageUrl) {
+          dokter.gambar_dokter = imageName;
+          dokter.urlGambar = imageUrl;
+        }
+
+        // Menyimpan perubahan ke dalam database
+        dokter
+          .save()
+          .then(() => {
+            res.send({ message: "dokter was updated successfully." });
+          })
+          .catch((err) => {
+            res
+              .status(500)
+              .send({ message: "Error updating dokter with id=" + id });
+          });
       }
     })
     .catch((err) => {
-      res.status(500).send({
-        message: "Error updating dokter with id=" + id,
-      });
+      res.status(500).send({ message: "Error updating dokter with id=" + id });
     });
 };
+
+// exports.update = async (req, res) => {
+//   console.log(req.body);
+
+//   const id = req.params.id;
+//   const file = req.file;
+
+//   try {
+//     let dokterData = req.body;
+
+//     // Jika pengguna mengunggah gambar baru, gunakan gambar yang baru diupdate
+//     if (file) {
+//       const imageName = file.filename;
+//       // local
+//       const imageUrl = `${req.protocol}://${req.get("host")}/dokter/${
+//         file.filename
+//       }`;
+//       // production
+//       // const imageUrl = `https://api.ngurusizin.online/layanan/${file.filename}`;
+
+//       dokterData = {
+//         ...dokterData,
+//         gambar_dokter: imageName,
+//         urlGambar: imageUrl,
+//       };
+//     }
+
+//     // Pastikan spesialis_dokter_id ada di dalam req.body
+//     const spesialis_dokter_id = req.body.spesialis_dokter_id;
+//     if (!spesialis_dokter_id) {
+//       return res
+//         .status(400)
+//         .send({ message: "spesialis_dokter_id is required!" });
+//     }
+
+//     // Temukan layanan yang akan diupdate
+//     const spesialis_dokter = await SpesialisDokter.findByPk(
+//       spesialis_dokter_id
+//     );
+//     if (!spesialis_dokter) {
+//       return res.status(404).send({ message: "Spesialis Dokter not found!" });
+//     }
+
+//     // Perbarui data layanan dengan data baru, termasuk data yang tidak berubah
+//     await layanan.update(dokterData);
+
+//     res.send({
+//       message: "Dokter berhasil diubah.",
+//     });
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// };
 
 // Delete a dokter with the specified id in the request
 exports.delete = (req, res) => {
