@@ -13,7 +13,7 @@ exports.create = async (req, res) => {
       !req.body.alamat ||
       !req.body.jk ||
       !req.body.no_telp ||
-      !req.body.tgl_lahir 
+      !req.body.tgl_lahir
     ) {
       return res.status(400).send({
         message:
@@ -54,6 +54,7 @@ const pasienerializer = new JSONAPISerializer("pasien", {
     "tgl_lahir",
     "gol_darah",
   ],
+  keyForAttribute: "underscore_case",
 });
 
 // Retrieve all pasiens from the database.

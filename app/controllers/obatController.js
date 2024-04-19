@@ -7,20 +7,20 @@ const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
 const { Op } = require("sequelize");
 
-const multer = require('multer');
+const multer = require("multer");
 
 // Create and Save a new obat
 exports.create = async (req, res) => {
   try {
     // Validate request
     if (
-      !req.body.nama_obat
-      || !req.body.satuan_box
-      || !req.body.satuan_sat
-      || !req.body.qty_box
-      || !req.body.qty_sat
-      || !req.body.stok
-      || !req.file
+      !req.body.nama_obat ||
+      !req.body.satuan_box ||
+      !req.body.satuan_sat ||
+      !req.body.qty_box ||
+      !req.body.qty_sat ||
+      !req.body.stok ||
+      !req.file
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -29,7 +29,9 @@ exports.create = async (req, res) => {
     // Process uploaded files:
     // Simpan atau proses gambar dan dapatkan URL atau path-nya
     const imageName = `${file.filename}`;
-    const imageUrl = `${req.protocol}://${req.get('host')}/obat/${file.filename}`;
+    const imageUrl = `${req.protocol}://${req.get("host")}/obat/${
+      file.filename
+    }`;
 
     const satuan_box = await Satuan.findByPk(req.body.satuan_box);
     if (!satuan_box) {
@@ -79,23 +81,21 @@ exports.findAll = async (req, res) => {
     // Query pencarian
     const searchQuery = {
       where: {
-        [Op.or]: [
-          { nama_obat: { [Op.like]: `%${keyword}%` } },
-        ],
+        [Op.or]: [{ nama_obat: { [Op.like]: `%${keyword}%` } }],
       },
       limit: pageSize,
       offset: offset,
       include: [
         {
           model: Satuan,
-          as: 'satuan_box',
-          attributes: ['nama_satuan'],
+          as: "satuan_box",
+          attributes: ["nama_satuan"],
         },
         {
           model: Satuan,
-          as: 'satuan_sat',
-          attributes: ['nama_satuan'],
-        }
+          as: "satuan_sat",
+          attributes: ["nama_satuan"],
+        },
       ],
       attributes: {
         exclude: ["createdAt", "updatedAt"],
@@ -212,9 +212,7 @@ exports.deleteAll = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all obats.",
+        message: err.message || "Some error occurred while removing all obats.",
       });
     });
 };
-
