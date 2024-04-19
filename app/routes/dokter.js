@@ -1,29 +1,26 @@
 module.exports = (app) => {
-    const dokter = require("../controllers/dokterController");
-  
-    var router = require("express").Router();
-  
-    // Create a new Tutorial
-    router.post("/", dokter.create);
-  
-    // Retrieve all Tutorials
-    router.get("/", dokter.findAll);
-  
-    // Retrieve all published dokter
-    // router.get("/published", order.findAllPublished);
-  
-    // Retrieve a single Tutorial with id
-    router.get("/:id", dokter.findOne);
-  
-    // Update a Tutorial with id
-    router.put("/:id", dokter.update);
-  
-    // Delete a Tutorial with id
-    router.delete("/:id", dokter.delete);
-  
-    // Delete all dokter
-    router.delete("/", dokter.deleteAll);
-  
-    app.use("/api/dokter", router);
-  };
-  
+  const dokter = require("../controllers/dokterController");
+  const dokterMiddleware = require("../middleware/dokter"); // Import middleware dokter
+
+  var router = require("express").Router();
+
+  // Create a new dokter with image upload
+  router.post("/", dokterMiddleware.single('gambar_dokter'), dokter.create); // Gunakan middleware untuk menangani upload gambar
+
+  // Retrieve all dokter
+  router.get("/", dokter.findAll);
+
+  // Retrieve a single dokter with id
+  router.get("/:id", dokter.findOne);
+
+  // Update a dokter with id
+  router.put("/:id", dokter.update);
+
+  // Delete a dokter with id
+  router.delete("/:id", dokter.delete);
+
+  // Delete all dokter
+  router.delete("/", dokter.deleteAll);
+
+  app.use("/api/dokter", router);
+};

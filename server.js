@@ -4,6 +4,7 @@ const cors = require("cors");
 const app = express();
 app.use("/layanan", express.static("public/assets/images/layanan")); //masukkan public direktori
 app.use("/barangdistributor", express.static("public/assets/images/barangdistributor"));
+app.use("/dokter", express.static("public/assets/images/dokter"));
 app.use("/obat", express.static("public/assets/images/obat"));
 app.use(cors());
 

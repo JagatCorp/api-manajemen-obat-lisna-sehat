@@ -12,7 +12,7 @@ const TYPE_IMAGE = {
 }
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'public/assets/images/obat'); 
+    cb(null, 'public/assets/images/dokter'); 
   },
   filename: (req, file, cb) => {
     // const ext = TYPE_IMAGE[file.mimetype] 
@@ -20,6 +20,6 @@ const storage = multer.diskStorage({
   },
 });
 
-const obat = multer({ storage: storage });
+const dokter = multer({ storage: storage });
 
-module.exports = obat;
+module.exports = dokter;

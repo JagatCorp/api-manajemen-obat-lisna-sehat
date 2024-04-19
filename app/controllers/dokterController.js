@@ -1,47 +1,107 @@
 const db = require("../models");
 const Dokter = db.dokter;
-const SpesialisDokter = db.spesialisdokter;
-
-// const Op = db.Sequelize.Op;
+const SpesialisDokter = db.spesialisdokters;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
-
+const dokterMiddleware = require("../middleware/dokter"); // Import middleware dokter
 const { Op } = require("sequelize");
 
 // Create and Save a new dokter
+// exports.create = async (req, res) => {
+//   try {
+//     // Validate request
+//     const requiredFields = ['nama_dokter', 'mulai_praktik', 'selesai_praktik', 'hari_praktik', 'spesialis_dokter_id'];
+//     const missingFields = requiredFields.filter(field => !req.body[field]);
+
+//     if (missingFields.length > 0) {
+//       return res.status(400).send({ message: `Data is required for the following fields: ${missingFields.join(', ')}` });
+//     }
+
+//     const spesialis_dokter = await SpesialisDokter.findByPk(req.body.spesialis_dokter_id);
+//     if (!spesialis_dokter) {
+//       return res.status(404).send({ message: "spesialis_dokter not found!" });
+//     }
+
+//     // Create dokter object with layanan_id
+//     const dokter = {
+//       nama_dokter: req.body.nama_dokter,
+//       mulai_praktik: req.body.mulai_praktik,
+//       selesai_praktik: req.body.selesai_praktik,
+//       hari_praktik: req.body.hari_praktik,
+//       spesialis_dokter_id: req.body.spesialis_dokter_id,
+//     //   gambar_dokter: req.file.path // Menyimpan path file gambar
+//     };
+
+//     // Save dokter to the database
+//     const createdDokter = await Dokter.create(dokter);
+//     res.send(createdDokter);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ message: error.message || "Error creating dokter." });
+//   }
+// };
+
 exports.create = async (req, res) => {
   try {
-    // Validate request
-    const requiredFields = ['nama_dokter', 'mulai_praktik', 'selesai_praktik', 'hari_praktik', 'spesialis_dokter_id'];
-    const missingFields = requiredFields.filter(field => !req.body[field]);
-
-    if (missingFields.length > 0) {
-      return res.status(400).send({ message: `Data is required for the following fields: ${missingFields.join(', ')}` });
+    // Pastikan bahwa data yang diterima sesuai dengan yang diharapkan
+    const {
+      nama_dokter,
+      mulai_praktik,
+      selesai_praktik,
+      hari_praktik,
+      spesialis_dokter_id,
+    } = req.body;
+    if (
+      !nama_dokter ||
+      !mulai_praktik ||
+      !selesai_praktik ||
+      !hari_praktik ||
+      !spesialis_dokter_id
+    ) {
+      return res.status(400).send({ message: "All fields are required!" });
     }
 
-    const spesialis_dokter = await SpesialisDokter.findByPk(req.body.spesialis_dokter_id);
+    // Pastikan bahwa file gambar telah diunggah
+    if (!req.file) {
+      return res.status(400).send({ message: "Image file is required!" });
+    }
+
+    // Proses file gambar yang diunggah
+    const imageName = req.file.filename;
+    const imageUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/assets/images/dokter/${imageName}`;
+
+    // Cek apakah spesialis_dokter dengan id yang diberikan ada dalam database
+    const spesialis_dokter = await SpesialisDokter.findByPk(
+      spesialis_dokter_id
+    );
     if (!spesialis_dokter) {
-      return res.status(404).send({ message: "spesialis_dokter not found!" });
+      return res.status(404).send({ message: "Spesialis Dokter not found!" });
     }
 
-    // Create dokter object with layanan_id
+    // Buat objek dokter dengan informasi gambar
     const dokter = {
-      nama_dokter: req.body.nama_dokter,
-      mulai_praktik: req.body.mulai_praktik,
-      selesai_praktik: req.body.selesai_praktik,
-      hari_praktik: req.body.hari_praktik,
-      spesialis_dokter_id: req.body.spesialis_dokter_id,
-    //   gambar_dokter: req.file.path // Menyimpan path file gambar
+      nama_dokter,
+      mulai_praktik,
+      selesai_praktik,
+      hari_praktik,
+      spesialis_dokter_id,
+      gambar_dokter: imageName,
+      urlGambar: imageUrl,
     };
 
-    // Save dokter to the database
+    // Simpan dokter ke dalam database
     const createdDokter = await Dokter.create(dokter);
+
+    // Respon dengan data dokter yang telah dibuat
     res.send(createdDokter);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: error.message || "Error creating dokter." });
+    res.status(500).send({
+      message: error.message || "Error creating dokter.",
+    });
   }
 };
-
 
 // code benar tapi salah
 exports.findAll = async (req, res) => {
@@ -57,21 +117,19 @@ exports.findAll = async (req, res) => {
     // Query pencarian
     const searchQuery = {
       where: {
-        [Op.or]: [
-          { nama_dokter: { [Op.like]: `%${keyword}%` } },
-        ],
+        [Op.or]: [{ nama_dokter: { [Op.like]: `%${keyword}%` } }],
       },
       limit: pageSize,
       offset: offset,
       include: [
         {
-            model: SpesialisDokter,
-            attributes: ['nama_spesialis', 'harga', 'is_dokter_gigi']
-        }
+          model: SpesialisDokter,
+          attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+        },
       ],
       attributes: {
         exclude: ["createdAt", "updatedAt"],
-      },
+      },
     };
 
     const dokter = await Dokter.findAll(searchQuery);
@@ -81,7 +139,7 @@ exports.findAll = async (req, res) => {
 
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
     const totalPages = Math.ceil(totalCount / pageSize);
-    
+
     // Kirim response dengan data JSON dan informasi pagination
     res.send({
       data: dokter,
@@ -93,28 +151,28 @@ exports.findAll = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Error retrieving dokters." });
-}
+  }
 };
 
 // Find a single admin with an id
 
 exports.findOne = async (req, res) => {
-    try {
+  try {
     const id = req.params.id;
     // res.status(200).send({ message: req.params.id });
 
     const dokter = await Dokter.findByPk(id, {
       include: [
         {
-            model: SpesialisDokter,
-            attributes: ['nama_spesialis', 'harga', 'is_dokter_gigi']
-        }
+          model: SpesialisDokter,
+          attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+        },
       ],
       attributes: {
         exclude: ["createdAt", "updatedAt"],
-      },
+      },
     });
-    
+
     if (!dokter) {
       return res.status(404).send({
         message: `Cannot find dokter with id=${id}.`,

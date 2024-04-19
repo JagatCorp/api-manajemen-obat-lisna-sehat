@@ -3,7 +3,8 @@ module.exports = (app) => {
     const upl_obat = require('../middleware/obat');
 
     var router = require("express").Router();
-  
+    // Route for image upload
+    router.post("/", upl_obat.single("gambar_obat"), obat.create);
     // Create a new Tutorial
     router.post("/", obat.create);
   

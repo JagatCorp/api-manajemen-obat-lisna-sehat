@@ -10,62 +10,54 @@ const { Op } = require("sequelize");
 const multer = require("multer");
 
 // Create and Save a new obat
+
+
 exports.create = async (req, res) => {
   try {
-    // Validate request
-    if (
-      !req.body.nama_obat ||
-      !req.body.satuan_box ||
-      !req.body.satuan_sat ||
-      !req.body.qty_box ||
-      !req.body.qty_sat ||
-      !req.body.stok ||
-      !req.file
-    ) {
-      return res.status(400).send({ message: "Data is required!" });
-    }
-    const file = req.file;
+    // Pastikan bahwa semua data yang diperlukan ada
+    const { nama_obat, satuan_box, satuan_sat, qty_box, qty_sat, stok } = req.body;
+    // if (!nama_obat || !satuan_box || !satuan_sat || !qty_box || !qty_sat || !stok || !req.file) {
+    //   return res.status(400).send({ message: "All fields are required!" });
+    // }
 
-    // Process uploaded files:
-    // Simpan atau proses gambar dan dapatkan URL atau path-nya
-    const imageName = `${file.filename}`;
-    const imageUrl = `${req.protocol}://${req.get("host")}/obat/${
-      file.filename
-    }`;
+    // Proses file gambar yang diunggah
+    const imageName = req.file.filename;
+    const imageUrl = `${req.protocol}://${req.get("host")}/obat/${imageName}`;
 
-    const satuan_box = await Satuan.findByPk(req.body.satuan_box);
-    if (!satuan_box) {
+    // Pastikan bahwa satuan_box dan satuan_sat yang diberikan ada dalam database
+    const satuan_box_data = await Satuan.findByPk(satuan_box);
+    if (!satuan_box_data) {
       return res.status(404).send({ message: "Satuan box not found!" });
     }
 
-    const satuan_sat = await Satuan.findByPk(req.body.satuan_sat);
-    if (!satuan_sat) {
+    const satuan_sat_data = await Satuan.findByPk(satuan_sat);
+    if (!satuan_sat_data) {
       return res.status(404).send({ message: "Satuan sat not found!" });
     }
 
-    // Create obat object with layanan_id
+    // Buat objek obat dengan informasi gambar
     const obat = {
-      nama_obat: req.body.nama_obat,
-      satuan_box: req.body.satuan_box,
-      satuan_sat: req.body.satuan_sat,
-      qty_box: req.body.qty_box,
-      qty_sat: req.body.qty_sat,
-      stok: req.body.stok,
-      // gambar_obat: req.body.gambar_obat,
+      nama_obat,
+      satuan_box,
+      satuan_sat,
+      qty_box,
+      qty_sat,
+      stok,
       gambar_obat: imageName,
       urlGambar: imageUrl,
     };
 
-    // Save obat to the database
+    // Simpan obat ke dalam database
     const createdObat = await Obat.create(obat);
-    res.status(201).send(createdObat);
-    // const newBarangdistributor = await Barangdistributor.create(barangdistributor);
-    // res.status(201).send(newBarangdistributor);
+    res.status(200).send(createdObat);
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: error.message || "Error creating obat." });
   }
 };
+
+
+
 
 // code benar tapi salah
 exports.findAll = async (req, res) => {
