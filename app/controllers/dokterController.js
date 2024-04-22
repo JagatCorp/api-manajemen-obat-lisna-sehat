@@ -151,18 +151,16 @@ exports.findOne = async (req, res) => {
 
 // Update a dokter by the id in the request
 exports.update = async (req, res) => {
-  console.log(req.body); // Cek konsol untuk melihat data yang diterima dari form-data
   const id = req.params.id;
   const {
     nama_dokter,
     mulai_praktik,
     selesai_praktik,
     hari_praktik,
-    spesialis_dokter_id,
   } = req.body;
 
   // Menginisialisasi variabel untuk gambar
-  let imageName, imageUrl;
+  let imageName, imageUrl, spesialis_dokter_id;
 
   // Memeriksa apakah file telah diunggah
   if (req.file) {
@@ -171,51 +169,49 @@ exports.update = async (req, res) => {
     imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
   }
 
-  // Cek apakah spesialis_dokter_id sudah ada di req.body
-  // if (!spesialis_dokter_id) {
-  //   return res
-  //     .status(400)
-  //     .send({ message: "spesialis_dokter_id is required!" });
-  // }
+  // Cek apakah spesialis_dokter_id sudah ada di req.body (dapat dari form-data)
+  if (req.body.spesialis_dokter_id) {
+    spesialis_dokter_id = req.body.spesialis_dokter_id;
+  }
 
-  // Memperbarui data dokter dalam database
-  Dokter.findByPk(id)
-    .then((dokter) => {
-      if (!dokter) {
-        res.status(404).send({
-          message: `Cannot update dokter with id=${id}. Dokter not found!`,
-        });
-      } else {
-        // Memperbarui data dokter dengan data yang diberikan
-        dokter.nama_dokter = nama_dokter;
-        dokter.mulai_praktik = mulai_praktik;
-        dokter.selesai_praktik = selesai_praktik;
-        dokter.hari_praktik = hari_praktik;
-        dokter.spesialis_dokter_id = spesialis_dokter_id;
+  try {
+    // Memperbarui data dokter dalam database
+    let dokter = await Dokter.findByPk(id);
 
-        // Menggunakan gambar baru jika ada, jika tidak, tetap menggunakan gambar lama
-        if (imageName && imageUrl) {
-          dokter.gambar_dokter = imageName;
-          dokter.urlGambar = imageUrl;
-        }
+    if (!dokter) {
+      return res.status(404).send({
+        message: `Cannot update dokter with id=${id}. Dokter not found!`,
+      });
+    }
 
-        // Menyimpan perubahan ke dalam database
-        dokter
-          .save()
-          .then(() => {
-            res.send({ message: "dokter was updated successfully." });
-          })
-          .catch((err) => {
-            res
-              .status(500)
-              .send({ message: "Error updating dokter with id=" + id });
-          });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({ message: "Error updating dokter with id=" + id });
-    });
+    // Memperbarui data dokter dengan data yang diberikan
+dokter.nama_dokter = nama_dokter;
+dokter.mulai_praktik = mulai_praktik;
+dokter.selesai_praktik = selesai_praktik;
+dokter.hari_praktik = hari_praktik;
+
+// Memeriksa apakah spesialis_dokter_id telah disertakan dalam form-data atau JSON
+if (req.body.spesialis_dokter_id) {
+  dokter.spesialis_dokter_id = req.body.spesialis_dokter_id;
+}
+
+// Menggunakan gambar baru jika ada, jika tidak, tetap menggunakan gambar lama
+if (imageName && imageUrl) {
+  dokter.gambar_dokter = imageName;
+  dokter.urlGambar = imageUrl;
+}
+
+
+    // Menyimpan perubahan ke dalam database
+    await dokter.save();
+
+    res.send({ message: "dokter was updated successfully." });
+  } catch (error) {
+    res.status(500).send({ message: "Error updating dokter with id=" + id });
+  }
 };
+
+
 
 // exports.update = async (req, res) => {
 //   console.log(req.body);

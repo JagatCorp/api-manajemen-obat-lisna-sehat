@@ -14,7 +14,7 @@ module.exports = (app) => {
   router.get("/:id", dokter.findOne);
 
   // Update a dokter with id
-  router.put("/:id", dokter.update);
+  router.put("/:id", dokterMiddleware.single('gambar_dokter'), dokter.update);
 
   // Delete a dokter with id
   router.delete("/:id", dokter.delete);
