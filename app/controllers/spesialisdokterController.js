@@ -72,10 +72,13 @@ exports.findAll = async (req, res) => {
 
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
     const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Menggunakan serializer untuk mengubah data menjadi JSON
+    const serializedData = SpesialisDokterselializer.serialize(spesialis_dokter);
     
     // Kirim response dengan data JSON dan informasi pagination
     res.send({
-      data: spesialis_dokter,
+      data: serializedData,
       currentPage: page,
       totalPages: totalPages,
       pageSize: pageSize,
