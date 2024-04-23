@@ -51,11 +51,13 @@ exports.findAll = async (req, res) => {
     // Query pencarian
     const searchQuery = {
       // pengen nyari apa???
-      // where: {
-      //   [Op.or]: [
-      //     { nama: { [Op.like]: `%${keyword}%` } },
-      //   ],
-      // },
+      where: {
+        [Op.or]: [
+          { nama_spesialis: { [Op.like]: `%${keyword}%` } },
+          { is_dokter_gigi: { [Op.like]: `%${keyword}%` } },
+          { harga: { [Op.like]: `%${keyword}%` } },
+        ],
+      },
       limit: pageSize,
       offset: offset,
       attributes: {
@@ -85,53 +87,39 @@ exports.findAll = async (req, res) => {
   }
 };
 
+// serialize
+const SpesialisDokterselializer = new JSONAPISerializer("spesialis_dokter", {
+  attributes: [
+    "nama_spesialis",
+    "harga",
+    "is_dokter_gigi",
+   
+  ],
+  keyForAttribute: "underscore_case",
+});
+
+
 // Find a single admin with an id
+exports.findOne = (req, res) => {
+  const id = req.params.id;
 
-exports.findOne = async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    const spesialis_dokter = await SpesialisDokter.findByPk(id, {
-      include: [
-        {
-          model: Obat,
-          attributes: ["nama_obat"],
-        },
-        {
-          model: Principle,
-          attributes: ["nama_instansi"],
-        },
-      ],
-      attributes: {
-        exclude: ["createdAt", "updatedAt"],
-      },
-    });
-    
-    if (!spesialis_dokter) {
-      return res.status(404).send({
-        message: `Cannot find spesialis_dokter with id=${id}.`,
+  SpesialisDokter.findByPk(id)
+    .then((data) => {
+      if (data) {
+        const serializedData = SpesialisDokterselializer.serialize(data);
+        res.send(serializedData);
+      } else {
+        res.status(404).send({
+          message: `Cannot find pasien with id=${id}.`,
+        });
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send({
+        message: "Error retrieving pasien with id=" + id,
       });
-    }
-    
-    // Find Principle by principle_id
-    const principle = await Principle.findByPk(req.body.principle_id);
-    if (!principle) {
-      return res.status(404).send({ message: "Principle not found!" });
-    }
-
-    // Find Obat by obat_id
-    const obat = await Obat.findByPk(req.body.obat_id);
-    if (!obat) {
-      return res.status(404).send({ message: "Obat not found!" });
-    }
-
-    res.send(spesialis_dokter);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      message: `Error retrieving spesialis_dokter with id=${id}`,
     });
-  }
 };
 
 // Update a spesialis_dokter by the id in the request
