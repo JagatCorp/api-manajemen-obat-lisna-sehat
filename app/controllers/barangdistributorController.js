@@ -1,6 +1,7 @@
 const db = require("../models");
 
 const Barangdistributor = db.barangdistributors;
+const Satuan = db.satuan;
 const Op = db.Sequelize.Op;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
@@ -10,6 +11,7 @@ const multer = require("multer");
 exports.create = async (req, res) => {
   try {
     const file = req.file;
+    const satuan_barangId = req.body.satuan_barangId;
 
     // Process uploaded files:
     // Simpan atau proses gambar dan dapatkan URL atau path-nya
@@ -18,12 +20,18 @@ exports.create = async (req, res) => {
       file.filename
     }`;
 
+    // Cek apakah satuan dengan id yang diberikan ada dalam database
+    const satuan = await Satuan.findByPk(satuan_barangId);
+    if (!satuan) {
+      return res.status(404).send({ message: "Satuan Barang not found!" });
+    }
+
     // Ambil URL gambar pertama jika tersedia
 
     // Buat objek Barangdistributor dengan URL gambar yang telah diproses
     const barangdistributor = {
       nama_barang: req.body.nama_barang,
-      satuan_barang: req.body.satuan_barang,
+      satuan_barangId: req.body.satuan_barangId,
       harga_satuan_barang: req.body.harga_satuan_barang,
       satuan_stok_barang: req.body.satuan_stok_barang,
       gambar: imageName,
@@ -46,7 +54,7 @@ exports.create = async (req, res) => {
 const barangdistributorSerializer = new JSONAPISerializer("barangdistributor", {
   attributes: [
     "nama_barang",
-    "satuan_barang",
+    "satuan_barangId",
     "harga_satuan_barang",
     "satuan_stok_barang",
     "gambar",
@@ -69,12 +77,18 @@ exports.findAll = async (req, res) => {
       where: {
         [Op.or]: [
           { nama_barang: { [Op.like]: `%${keyword}%` } },
-          { satuan_barang: { [Op.like]: `%${keyword}%` } },
           { harga_satuan_barang: { [Op.like]: `%${keyword}%` } },
+          { satuan_stok_barang: { [Op.like]: `%${keyword}%` } },
         ],
       },
       limit: pageSize,
       offset: offset,
+      include: [
+        {
+          model: Satuan,
+          attributes: ["nama_satuan"],
+        },
+      ],
     };
 
     // Mengambil data barangdistributor dengan pagination dan pencarian menggunakan Sequelize
@@ -86,7 +100,7 @@ exports.findAll = async (req, res) => {
       barangdistributorSerializer.serialize(barangdistributors);
 
     res.send({
-      data: barangdistributor,
+      data: barangdistributors,
       currentPage: page,
       totalPages: totalPages,
       pageSize: pageSize,
@@ -99,26 +113,36 @@ exports.findAll = async (req, res) => {
 };
 
 // Find a single admin with an id
-exports.findOne = (req, res) => {
-  const id = req.params.id;
+exports.findOne = async (req, res) => {
+  try {
+    const id = req.params.id;
+    // res.status(200).send({ message: req.params.id });
 
-  Barangdistributor.findByPk(id)
-    .then((data) => {
-      if (data) {
-        const serializedData = barangdistributorSerializer.serialize(data);
-        res.send(serializedData);
-      } else {
-        res.status(404).send({
-          message: `Cannot find barangdistributor with id=${id}.`,
-        });
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).send({
-        message: "Error retrieving barangdistributor with id=" + id,
-      });
+    const barangdistributor = await Barangdistributor.findByPk(id, {
+      include: [
+        {
+          model: Satuan,
+          attributes: ["nama_satuan"],
+        },
+      ],
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
     });
+
+    if (!barangdistributor) {
+      return res.status(404).send({
+        message: `Cannot find barangdistributor with id=${id}.`,
+      });
+    }
+
+    res.send(barangdistributor);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: `Error retrieving barangdistributor with id=${id}`,
+    });
+  }
 };
 
 // Update a Barangdistributor by the id in the request
