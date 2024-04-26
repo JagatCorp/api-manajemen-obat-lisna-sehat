@@ -3,9 +3,13 @@ const cors = require("cors");
 
 const app = express();
 app.use("/layanan", express.static("public/assets/images/layanan")); //masukkan public direktori
-app.use("/barangdistributor", express.static("public/assets/images/barangdistributor"));
+app.use(
+  "/barangdistributor",
+  express.static("public/assets/images/barangdistributor")
+);
 app.use("/dokter", express.static("public/assets/images/dokter"));
 app.use("/obat", express.static("public/assets/images/obat"));
+app.use("/qrcode", express.static("public/assets/images/qrcode"));
 app.use(cors());
 
 const db = require("./app/models");
@@ -18,9 +22,9 @@ db.sequelize
     console.log("Failed to sync db: " + err.message);
   });
 
-  const corsOptions = {
-    origin: ["https://ngurusizin.online", "http://localhost:5000"],
-  };
+const corsOptions = {
+  origin: ["https://ngurusizin.online", "http://localhost:5000"],
+};
 
 app.use(cors(corsOptions));
 
@@ -50,6 +54,7 @@ require("./app/routes/principle")(app);
 require("./app/routes/pembelidistributor")(app);
 require("./app/routes/pasien")(app);
 require("./app/routes/transaksidistributor")(app);
+require("./app/routes/transaksimedis")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 5000;
