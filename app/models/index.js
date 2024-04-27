@@ -48,6 +48,7 @@ db.transaksidistributors = require("./Transaksidistributor.js")(
   sequelize,
   Sequelize
 );
+db.transaksi_medis = require("./TransaksiMedis.js")(sequelize, Sequelize);
 
 // relasi table order ke layanan
 db.order.belongsTo(db.layanan, { foreignKey: "layananId" });
@@ -79,6 +80,12 @@ db.transaksidistributors.belongsTo(db.pembelidistributors, {
 db.barangdistributors.belongsTo(db.satuan, {
   foreignKey: "satuan_barangId",
 });
+
+// relasi table transaksi medis dan masuk ke dokter
+db.transaksi_medis.belongsTo(db.dokter, { foreignKey: "dokter_id" });
+
+// relasi table transaksi medis dan masuk ke pasien
+db.transaksi_medis.belongsTo(db.pasien, { foreignKey: "pasien_id" });
 
 // Sinkronkan model dengan database
 sequelize
