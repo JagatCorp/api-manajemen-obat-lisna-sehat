@@ -15,22 +15,22 @@ const multer = require("multer");
 exports.create = async (req, res) => {
   try {
     // Pastikan bahwa semua data yang diperlukan ada
-    const { nama_obat, satuan_box, satuan_sat, qty_box, qty_sat, stok } = req.body;
-    // if (!nama_obat || !satuan_box || !satuan_sat || !qty_box || !qty_sat || !stok || !req.file) {
-    //   return res.status(400).send({ message: "All fields are required!" });
-    // }
+    const { nama_obat, satuan_box_id, satuan_sat_id, qty_box, qty_sat, stok } = req.body;
+    if (!nama_obat || !satuan_box_id || !satuan_sat_id || !qty_box || !qty_sat || !stok || !req.file) {
+      return res.status(400).send({ message: "All fields are required!" });
+    }
 
     // Proses file gambar yang diunggah
     const imageName = req.file.filename;
     const imageUrl = `${req.protocol}://${req.get("host")}/obat/${imageName}`;
 
     // Pastikan bahwa satuan_box dan satuan_sat yang diberikan ada dalam database
-    const satuan_box_data = await Satuan.findByPk(satuan_box);
+    const satuan_box_data = await Satuan.findByPk(satuan_box_id);
     if (!satuan_box_data) {
       return res.status(404).send({ message: "Satuan box not found!" });
     }
 
-    const satuan_sat_data = await Satuan.findByPk(satuan_sat);
+    const satuan_sat_data = await Satuan.findByPk(satuan_sat_id);
     if (!satuan_sat_data) {
       return res.status(404).send({ message: "Satuan sat not found!" });
     }
@@ -38,8 +38,8 @@ exports.create = async (req, res) => {
     // Buat objek obat dengan informasi gambar
     const obat = {
       nama_obat,
-      satuan_box,
-      satuan_sat,
+      satuan_box_id,
+      satuan_sat_id,
       qty_box,
       qty_sat,
       stok,
@@ -141,29 +141,64 @@ exports.findOne = async (req, res) => {
   }
 };
 
-// Update a obat by the id in the request
+// Update an Obat by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
+  const file = req.file;
 
-  Obat.update(req.body, {
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "obat was updated successfully.",
-        });
-      } else {
-        res.send({
-          message: `Cannot update obat with id=${id}. Maybe obat was not found or req.body is empty!`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Error updating obat with id=" + id,
-      });
+  try {
+    let obatData = req.body;
+
+    // Jika pengguna mengunggah gambar baru, gunakan gambar yang baru diupdate
+    if (file) {
+      const imageName = file.filename;
+      const imageUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/obat/${file.filename}`;
+
+      obatData = {
+        ...obatData,
+        gambar_obat: imageName,
+        urlGambar: imageUrl,
+      };
+    }
+
+    // Temukan obat yang akan diupdate
+    const obat = await Obat.findByPk(id);
+    if (!obat) {
+      return res
+        .status(404)
+        .send({ message: `Obat with id=${id} not found` });
+    }
+
+    // res.send({
+    //   message: obat,
+    // });
+
+    // res.send({
+    //   message: obatData,
+    // });
+
+    // Perbarui data obat dengan data baru, termasuk data yang tidak berubah
+    await obat.update(obatData);
+
+    // const updatedCount = await obat.update(obatData);
+
+    // if (updatedCount === 0) {
+    //   res.status(400).send({ message: "No changes were made to the obat." });
+    // } else {
+    //   res.send({
+    //     message: "Obat berhasil diubah.",
+    //     data: obat
+    //   });
+    // }
+
+    res.send({
+      message: "Obat berhasil diubah.",
     });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
 };
 
 // Delete a obat with the specified id in the request
