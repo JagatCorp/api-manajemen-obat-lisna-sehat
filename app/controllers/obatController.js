@@ -11,12 +11,20 @@ const multer = require("multer");
 
 // Create and Save a new obat
 
-
 exports.create = async (req, res) => {
   try {
     // Pastikan bahwa semua data yang diperlukan ada
-    const { nama_obat, satuan_box_id, satuan_sat_id, qty_box, qty_sat, stok } = req.body;
-    if (!nama_obat || !satuan_box_id || !satuan_sat_id || !qty_box || !qty_sat || !stok || !req.file) {
+    const { nama_obat, satuan_box_id, satuan_sat_id, qty_box, qty_sat, stok } =
+      req.body;
+    if (
+      !nama_obat ||
+      !satuan_box_id ||
+      !satuan_sat_id ||
+      !qty_box ||
+      !qty_sat ||
+      !stok ||
+      !req.file
+    ) {
       return res.status(400).send({ message: "All fields are required!" });
     }
 
@@ -55,9 +63,6 @@ exports.create = async (req, res) => {
     res.status(500).send({ message: error.message || "Error creating obat." });
   }
 };
-
-
-
 
 // code benar tapi salah
 exports.findAll = async (req, res) => {
@@ -152,9 +157,9 @@ exports.update = async (req, res) => {
     // Jika pengguna mengunggah gambar baru, gunakan gambar yang baru diupdate
     if (file) {
       const imageName = file.filename;
-      const imageUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/obat/${file.filename}`;
+      const imageUrl = `${req.protocol}://${req.get("host")}/obat/${
+        file.filename
+      }`;
 
       obatData = {
         ...obatData,
@@ -166,9 +171,7 @@ exports.update = async (req, res) => {
     // Temukan obat yang akan diupdate
     const obat = await Obat.findByPk(id);
     if (!obat) {
-      return res
-        .status(404)
-        .send({ message: `Obat with id=${id} not found` });
+      return res.status(404).send({ message: `Obat with id=${id} not found` });
     }
 
     // res.send({
