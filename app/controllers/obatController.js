@@ -1,6 +1,8 @@
 const db = require("../models");
 const Obat = db.obat;
 const Satuan = db.satuan;
+const fs = require('fs');
+const pathModule = require('path'); // Ubah nama variabel menjadi pathModule
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
@@ -165,33 +167,25 @@ exports.update = async (req, res) => {
 
     // Temukan obat yang akan diupdate
     const obat = await Obat.findByPk(id);
+
+    const filePath = pathModule.join(__dirname, '../../public/assets/images/obat/', obat.gambar_obat);
+
+    try {
+      fs.unlinkSync(filePath);
+      console.log(`Deleted the file under ${filePath}`);
+    } catch (err) {
+      console.log('An error occurred: ', err.message);
+    }
+
     if (!obat) {
       return res
         .status(404)
         .send({ message: `Obat with id=${id} not found` });
     }
 
-    // res.send({
-    //   message: obat,
-    // });
-
-    // res.send({
-    //   message: obatData,
-    // });
-
     // Perbarui data obat dengan data baru, termasuk data yang tidak berubah
     await obat.update(obatData);
-
-    // const updatedCount = await obat.update(obatData);
-
-    // if (updatedCount === 0) {
-    //   res.status(400).send({ message: "No changes were made to the obat." });
-    // } else {
-    //   res.send({
-    //     message: "Obat berhasil diubah.",
-    //     data: obat
-    //   });
-    // }
+    
 
     res.send({
       message: "Obat berhasil diubah.",
@@ -202,8 +196,19 @@ exports.update = async (req, res) => {
 };
 
 // Delete a obat with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
+
+  const obat = await Obat.findByPk(id);
+
+  const filePath = pathModule.join(__dirname, '../../public/assets/images/obat/', obat.gambar_obat);
+
+  try {
+    fs.unlinkSync(filePath);
+    console.log(`Deleted the file under ${filePath}`);
+  } catch (err) {
+    console.log('An error occurred: ', err.message);
+  }
 
   Obat.destroy({
     where: { id: id },
