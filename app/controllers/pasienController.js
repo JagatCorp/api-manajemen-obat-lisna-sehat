@@ -21,8 +21,12 @@ exports.create = async (req, res) => {
       });
     }
 
-    // Create pembelidistributor object with hashed password
-    const pembelidistributor = {
+    // Hash password securely using bcrypt
+    const saltRounds = 10; // Adjust salt rounds as needed (higher for stronger hashing)
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
+    // Create pasien object with hashed password
+    const pasien = {
       nama: req.body.nama,
       alamat: req.body.alamat,
       jk: req.body.jk,
@@ -30,16 +34,18 @@ exports.create = async (req, res) => {
       alergi: req.body.alergi,
       tgl_lahir: req.body.tgl_lahir,
       gol_darah: req.body.gol_darah,
+      username: req.body.username,
+      password: hashedPassword,
     };
 
-    // Save pembelidistributor to the database
-    const createdPembelidistributor = await Pasien.create(pembelidistributor);
-    res.send(createdPembelidistributor);
+    // Save pasien to the database
+    const createPasien = await Pasien.create(pasien);
+    res.send(createPasien);
   } catch (error) {
     console.error(error);
     res
       .status(500)
-      .send({ message: error.message || "Error creating pembelidistributor." });
+      .send({ message: error.message || "Error creating pasien." });
   }
 };
 

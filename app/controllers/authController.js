@@ -1,33 +1,41 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const db = require("../models");
-const Administrators = db.administrators; // Menggunakan model Administrators
+const Pasien = db.pasien;
+const Dokter = db.dokter;
 const { JWT_SECRET } = require("../configs/database"); // Mengimpor nilai JWT_SECRET dari file konfigurasi
 
+// Fungsi login
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    // Cari administrator berdasarkan email
-    const administrator = await Administrators.findOne({
-      where: { email: email },
+    // Cari pengguna sebagai pasien
+    let user = await Pasien.findOne({
+      where: { username: username },
     });
 
-    // Jika administrator tidak ditemukan atau password salah, kirim respons error
-    if (
-      !administrator ||
-      !(await bcrypt.compare(password, administrator.password))
-    ) {
-      return res.status(401).json({ message: "Invalid email or password" });
+    // Jika tidak ditemukan, coba cari sebagai dokter
+    if (!user) {
+      user = await Dokter.findOne({
+        where: { username: username },
+      });
     }
 
+    // Jika tidak ditemukan di kedua model, kirim respons kesalahan
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
+    // Tentukan peran berdasarkan model yang menemukan pengguna
+    const role = user instanceof Pasien ? "pasien" : "dokter";
+
     // Buat token JWT
-    const token = jwt.sign({ id: administrator.id }, JWT_SECRET, {
-      // Menggunakan JWT_SECRET sebagai kunci rahasia
+    const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
       expiresIn: "1h",
     });
 
-// Kirim token sebagai respons
+    // Kirim token sebagai respons
     res.json({ token });
   } catch (error) {
     console.error(error);
@@ -46,11 +54,10 @@ exports.logout = (req, res) => {
       return res.status(401).json({ message: "Missing token, logout failed" });
     }
 
-    // Verifikasi token dan ambil ID pengguna dari token
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.id;
-
     // Hapus token dari sisi klien (misalnya, dengan menghapus token dari local storage)
+    // Hapus token dari local storage
+    // localStorage.removeItem("token");
+    // Implementasikan sesuai kebutuhan aplikasi Anda
 
     // Kirim respons logout berhasil
     res.json({ message: "Logout successful" });
@@ -60,50 +67,48 @@ exports.logout = (req, res) => {
   }
 };
 
-
+const decodeJWTAndGetID = (token) => {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(decoded.id);
+      }
+    });
+  });
+};
 
 exports.cekToken = async (req, res) => {
   try {
     // Dapatkan token dari header Authorization
     const token = req.header("Authorization");
 
+    console.log("Token received:", token); // Tambahkan ini untuk mencetak token
+
     if (!token) {
-      return res.status(401).json({ message: "Missing token, logout failed" });
+      return res.status(401).json({ message: "Missing token" });
     }
 
-    // decode JWT untuk mendapatkan id dari user
-    decodeJWTAndGetID(token)
-      .then(async (id) => {
-        const administrator = await Administrators.findOne({
-          where: { id: id }
-        })
-
-        res.json({ role: administrator.role })
-
-      })
-      .catch((err) => {
-        res.status(500).json({ message: `Gagal mendeskripsi JWT:`, err })
-      })
-
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: `Internal server error ${error}` })
-  }
-};
-
-function decodeJWTAndGetID(token) {
-  return new Promise((resolve, reject) => {
+    // decode JWT untuk mendapatkan payload
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
-        reject(err);
+        return res.status(500).json({ message: "Failed to decode JWT", err });
       }
-      else {
-        // mengambbil id dari payload JWT
-        const id = decoded.id;
-        resolve(id);
-      }
-    })
-  })
-}
 
+      // Ambil peran (role) dari payload JWT
+      const { role } = decoded;
+
+      if (!role) {
+        return res
+          .status(500)
+          .json({ message: "Role not found in JWT payload" });
+      }
+
+      res.json({ role });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};

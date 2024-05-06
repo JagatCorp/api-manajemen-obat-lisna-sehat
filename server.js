@@ -23,7 +23,12 @@ db.sequelize
   });
 
 const corsOptions = {
-  origin: ["https://ngurusizin.online", "http://localhost:5000"],
+  origin: [
+    "https://lisnasehat.online",
+    "http://localhost:5000",
+    "http://localhost:3000",
+    // "http://192.168.1.7:3000",
+  ],
 };
 
 app.use(cors(corsOptions));

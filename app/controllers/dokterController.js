@@ -4,7 +4,7 @@ const SpesialisDokter = db.spesialisdokter;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 const dokterMiddleware = require("../middleware/dokter"); // Import middleware dokter
 const { Op } = require("sequelize");
-
+const bcrypt = require("bcryptjs");
 exports.create = async (req, res) => {
   try {
     // Pastikan bahwa data yang diterima sesuai dengan yang diharapkan
@@ -14,13 +14,15 @@ exports.create = async (req, res) => {
       selesai_praktik,
       hari_praktik,
       spesialis_dokter_id,
+      username,
     } = req.body;
     if (
       !nama_dokter ||
       !mulai_praktik ||
       !selesai_praktik ||
       !hari_praktik ||
-      !spesialis_dokter_id
+      !spesialis_dokter_id ||
+      !username
     ) {
       return res.status(400).send({ message: "All fields are required!" });
     }
@@ -42,6 +44,10 @@ exports.create = async (req, res) => {
       return res.status(404).send({ message: "Spesialis Dokter not found!" });
     }
 
+    // Hash password securely using bcrypt
+    const saltRounds = 10; // Adjust salt rounds as needed (higher for stronger hashing)
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
     // Buat objek dokter dengan informasi gambar
     const dokter = {
       nama_dokter,
@@ -51,6 +57,8 @@ exports.create = async (req, res) => {
       spesialis_dokter_id,
       gambar_dokter: imageName,
       urlGambar: imageUrl,
+      username,
+      password: hashedPassword,
     };
 
     // Simpan dokter ke dalam database
@@ -152,12 +160,8 @@ exports.findOne = async (req, res) => {
 // Update a dokter by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const {
-    nama_dokter,
-    mulai_praktik,
-    selesai_praktik,
-    hari_praktik,
-  } = req.body;
+  const { nama_dokter, mulai_praktik, selesai_praktik, hari_praktik } =
+    req.body;
 
   // Menginisialisasi variabel untuk gambar
   let imageName, imageUrl, spesialis_dokter_id;
@@ -185,22 +189,21 @@ exports.update = async (req, res) => {
     }
 
     // Memperbarui data dokter dengan data yang diberikan
-dokter.nama_dokter = nama_dokter;
-dokter.mulai_praktik = mulai_praktik;
-dokter.selesai_praktik = selesai_praktik;
-dokter.hari_praktik = hari_praktik;
+    dokter.nama_dokter = nama_dokter;
+    dokter.mulai_praktik = mulai_praktik;
+    dokter.selesai_praktik = selesai_praktik;
+    dokter.hari_praktik = hari_praktik;
 
-// Memeriksa apakah spesialis_dokter_id telah disertakan dalam form-data atau JSON
-if (req.body.spesialis_dokter_id) {
-  dokter.spesialis_dokter_id = req.body.spesialis_dokter_id;
-}
+    // Memeriksa apakah spesialis_dokter_id telah disertakan dalam form-data atau JSON
+    if (req.body.spesialis_dokter_id) {
+      dokter.spesialis_dokter_id = req.body.spesialis_dokter_id;
+    }
 
-// Menggunakan gambar baru jika ada, jika tidak, tetap menggunakan gambar lama
-if (imageName && imageUrl) {
-  dokter.gambar_dokter = imageName;
-  dokter.urlGambar = imageUrl;
-}
-
+    // Menggunakan gambar baru jika ada, jika tidak, tetap menggunakan gambar lama
+    if (imageName && imageUrl) {
+      dokter.gambar_dokter = imageName;
+      dokter.urlGambar = imageUrl;
+    }
 
     // Menyimpan perubahan ke dalam database
     await dokter.save();
@@ -210,8 +213,6 @@ if (imageName && imageUrl) {
     res.status(500).send({ message: "Error updating dokter with id=" + id });
   }
 };
-
-
 
 // exports.update = async (req, res) => {
 //   console.log(req.body);

@@ -1,11 +1,9 @@
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../configs/database"); // Mengimpor JWT_SECRET dari file konfigurasi
+const { JWT_SECRET } = require("../configs/database");
 
 const authMiddleware = (req, res, next) => {
-  // Dapatkan token dari header Authorization
   const token = req.header("Authorization");
 
-  // Periksa jika token tidak ada
   if (!token) {
     return res
       .status(401)
@@ -13,11 +11,10 @@ const authMiddleware = (req, res, next) => {
   }
 
   try {
-    // Verifikasi token
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Tambahkan user ke request untuk digunakan di endpoint terproteksi
-    req.user = decoded;
+    // Tambahkan role pengguna ke request untuk digunakan di endpoint terproteksi
+    req.role = decoded.role;
 
     // Lanjutkan ke middleware berikutnya atau ke endpoint
     next();

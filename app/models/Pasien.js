@@ -23,6 +23,12 @@ module.exports = (sequelize, Sequelize) => {
     gol_darah: {
       type: Sequelize.STRING,
     },
+    username: {
+      type: Sequelize.STRING,
+    },
+    password: {
+      type: Sequelize.STRING,
+    },
   });
 
   return Pasien;
