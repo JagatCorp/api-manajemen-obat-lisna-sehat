@@ -16,7 +16,13 @@ exports.create = async (req, res) => {
     // Process uploaded files:
     // Simpan atau proses gambar dan dapatkan URL atau path-nya
     const imageName = `${file.filename}`;
-    const imageUrl = `${req.protocol}://${req.get("host")}/barangdistributor/${
+    //local
+    // const imageUrl = `${req.protocol}://${req.get("host")}/barangdistributor/${
+    //   file.filename
+    // }`;
+
+    //production
+    const imageUrl = `https://lisnasehat.online/barangdistributor/${
       file.filename
     }`;
 

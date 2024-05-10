@@ -54,9 +54,12 @@ exports.create = async (req, res) => {
         return res.status(500).send({ message: "Error generating QR code." });
       }
 
-      // Generate URL for the QR code image
-      const qrCodeUrl = `${req.protocol}://${req.get(
-        "host"
+      // Generate URL for the QR code image local
+      // const qrCodeUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/qrcode/${filename}`;
+      // production
+      const qrCodeUrl = `https://lisnasehat.online/
       )}/qrcode/${filename}`;
 
       // Add QR code URL to the transaksi_medis object
