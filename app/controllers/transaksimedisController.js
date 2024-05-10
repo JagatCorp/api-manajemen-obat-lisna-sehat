@@ -1,5 +1,6 @@
 const db = require("../models");
 const TransaksiMedis = db.transaksi_medis;
+const SpesialisDokter = db.spesialisdokter;
 const Dokter = db.dokter;
 const Pasien = db.pasien;
 const qr = require("qrcode");
@@ -8,6 +9,7 @@ const { v4: uuidv4 } = require("uuid");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
 const { Op } = require("sequelize");
+const Spesialisdokter = require("../models/Spesialisdokter");
 
 // Create and Save a new transaksi_medis
 exports.create = async (req, res) => {
@@ -22,6 +24,13 @@ exports.create = async (req, res) => {
     if (!dokter) {
       return res.status(404).send({ message: "Dokter not found!" });
     }
+    
+    const spesialis_dokter = await SpesialisDokter.findByPk(dokter.spesialis_dokter_id);
+    if (!spesialis_dokter) {
+      return res.status(404).send({ message: "Spesialis Dokter not found!" });
+    }
+
+    dokter['spesialis_dokter'] = spesialis_dokter;
 
     // Find Pasien by pasien_id
     const pasien = await Pasien.findByPk(req.body.pasien_id);
