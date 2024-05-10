@@ -59,8 +59,7 @@ exports.create = async (req, res) => {
       //   "host"
       // )}/qrcode/${filename}`;
       // production
-      const qrCodeUrl = `https://lisnasehat.online/
-      )}/qrcode/${filename}`;
+      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Add QR code URL to the transaksi_medis object
       transaksi_medis.url_qrcode = qrCodeUrl;
@@ -414,10 +413,13 @@ exports.update = async (req, res) => {
         return res.status(500).send({ message: "Error generating QR code." });
       }
 
-      // Generate URL for the QR code image
-      const qrCodeUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/qrcode/${filename}`;
+      // Generate URL for the QR code image local
+      // const qrCodeUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/qrcode/${filename}`;
+
+      // production
+      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Update the QR code URL and filename in the database
       await TransaksiMedis.update(
