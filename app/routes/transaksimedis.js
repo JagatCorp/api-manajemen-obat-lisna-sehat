@@ -11,9 +11,12 @@ module.exports = (app) => {
 
   // Retrieve all published satuan
   // router.get("/published", order.findAllPublished);
-
+  // find qr code pasien
+  // router.get("/:id_pasien", transaksi_medis.findQrCode);
   // Retrieve a single Tutorial with id
   router.get("/:id", transaksi_medis.findOne);
+
+  router.get("/all/:id", transaksi_medis.findOneAll);
 
   // Update a Tutorial with id
   router.put("/:id", transaksi_medis.update);

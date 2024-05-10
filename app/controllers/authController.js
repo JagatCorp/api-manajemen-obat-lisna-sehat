@@ -20,6 +20,20 @@ exports.login = async (req, res) => {
       user = await Dokter.findOne({
         where: { username: username },
       });
+
+      const role = "dokter";
+      const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
+        expiresIn: "1h",
+      });
+
+      res.json({ token, id: user.id, urlGambar: user.urlGambar });
+    } else {
+      const role = "pasien";
+      const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
+        expiresIn: "1h",
+      });
+
+      res.json({ token, id: user.id });
     }
 
     // Jika tidak ditemukan di kedua model, kirim respons kesalahan
@@ -28,15 +42,11 @@ exports.login = async (req, res) => {
     }
 
     // Tentukan peran berdasarkan model yang menemukan pengguna
-    const role = user instanceof Pasien ? "pasien" : "dokter";
+    // const role = user instanceof Pasien ? "pasien" : "dokter";
 
     // Buat token JWT
-    const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
-      expiresIn: "1h",
-    });
 
     // Kirim token sebagai respons
-    res.json({ token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
