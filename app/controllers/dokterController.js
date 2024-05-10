@@ -34,7 +34,10 @@ exports.create = async (req, res) => {
 
     // Proses file gambar yang diunggah
     const imageName = req.file.filename;
-    const imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
+    // local
+    // const imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
+    // production
+    const imageUrl = `https://api.lisnasehat.online/dokter/${imageName}`;
 
     // Cek apakah spesialis_dokter dengan id yang diberikan ada dalam database
     const spesialis_dokter = await SpesialisDokter.findByPk(
@@ -170,7 +173,10 @@ exports.update = async (req, res) => {
   if (req.file) {
     // Jika file diunggah, proses file gambar yang diunggah
     imageName = req.file.filename;
-    imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
+    // local
+    // imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
+    // production
+    imageUrl = `https://api.lisnasehat.online/dokter/${imageName}`;
   }
 
   // Cek apakah spesialis_dokter_id sudah ada di req.body (dapat dari form-data)
