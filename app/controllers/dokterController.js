@@ -5,6 +5,19 @@ const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 const dokterMiddleware = require("../middleware/dokter"); // Import middleware dokter
 const { Op } = require("sequelize");
 const bcrypt = require("bcryptjs");
+const fs = require('fs');
+
+// Fungsi untuk menghapus file gambar
+const deleteImage = (filePath) => {
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error('Gagal menghapus file:', err);
+      return;
+    }
+    console.log('File berhasil dihapus:', filePath);
+  });
+};
+
 exports.create = async (req, res) => {
   try {
     // Pastikan bahwa data yang diterima sesuai dengan yang diharapkan
@@ -166,17 +179,10 @@ exports.findOne = async (req, res) => {
 exports.update = async (req, res) => {
   const id = req.params.id;
   const { nama_dokter, mulai_praktik, selesai_praktik, hari_praktik, jk, username, password } =
-  req.body;
+    req.body;
 
   // Menginisialisasi variabel untuk gambar
   let imageName, imageUrl, spesialis_dokter_id;
-
-  // Memeriksa apakah file telah diunggah
-  if (req.file) {
-    // Jika file diunggah, proses file gambar yang diunggah
-    imageName = req.file.filename;
-    imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
-  }
 
   // Cek apakah spesialis_dokter_id sudah ada di req.body (dapat dari form-data)
   if (req.body.spesialis_dokter_id) {
@@ -186,6 +192,21 @@ exports.update = async (req, res) => {
   try {
     // Memperbarui data dokter dalam database
     let dokter = await Dokter.findByPk(id);
+
+    // Memeriksa apakah file telah diunggah
+    if (req.file == null) {
+      imageName = dokter.imageName;
+      imageUrl = dokter.imageUrl;
+    } else {
+      // Jika file diunggah, proses file gambar yang diunggah
+      imageName = req.file.filename;
+      imageUrl = `${req.protocol}://${req.get("host")}/dokter/${imageName}`;
+
+      let filePath = 'public/assets/images/dokter/' + dokter.gambar_dokter;
+      if (fs.existsSync(filePath)) {
+        deleteImage(filePath);
+      }
+    }
 
     if (!dokter) {
       return res.status(404).send({
@@ -199,9 +220,9 @@ exports.update = async (req, res) => {
     // Hash password securely using bcrypt
     const saltRounds = 10; // Adjust salt rounds as needed (higher for stronger hashing)
     let hashedPassword = '';
-    if(password != ''){
+    if (password != '') {
       hashedPassword = await bcrypt.hash(password, saltRounds);
-    } else{
+    } else {
       hashedPassword = dokter.password;
     }
 
@@ -235,83 +256,37 @@ exports.update = async (req, res) => {
   }
 };
 
-// exports.update = async (req, res) => {
-//   console.log(req.body);
-
-//   const id = req.params.id;
-//   const file = req.file;
-
-//   try {
-//     let dokterData = req.body;
-
-//     // Jika pengguna mengunggah gambar baru, gunakan gambar yang baru diupdate
-//     if (file) {
-//       const imageName = file.filename;
-//       // local
-//       const imageUrl = `${req.protocol}://${req.get("host")}/dokter/${
-//         file.filename
-//       }`;
-//       // production
-//       // const imageUrl = `https://api.ngurusizin.online/layanan/${file.filename}`;
-
-//       dokterData = {
-//         ...dokterData,
-//         gambar_dokter: imageName,
-//         urlGambar: imageUrl,
-//       };
-//     }
-
-//     // Pastikan spesialis_dokter_id ada di dalam req.body
-//     const spesialis_dokter_id = req.body.spesialis_dokter_id;
-//     if (!spesialis_dokter_id) {
-//       return res
-//         .status(400)
-//         .send({ message: "spesialis_dokter_id is required!" });
-//     }
-
-//     // Temukan layanan yang akan diupdate
-//     const spesialis_dokter = await SpesialisDokter.findByPk(
-//       spesialis_dokter_id
-//     );
-//     if (!spesialis_dokter) {
-//       return res.status(404).send({ message: "Spesialis Dokter not found!" });
-//     }
-
-//     // Perbarui data layanan dengan data baru, termasuk data yang tidak berubah
-//     await layanan.update(dokterData);
-
-//     res.send({
-//       message: "Dokter berhasil diubah.",
-//     });
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// };
-
-// Delete a dokter with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
 
-  Dokter.destroy({
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "dokter was deleted successfully!",
-        });
-      } else {
-        res.send({
-          message: `Cannot delete dokter with id=${id}. Maybe dokter was not found!`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Could not delete dokter with id=" + id,
+  try {
+    let dokter = await Dokter.findByPk(id);
+    if (!dokter) {
+      return res.status(404).send({
+        message: `Dokter with id=${id} was not found.`,
       });
+    }
+
+    // Hapus entitas dokter dari database
+    await dokter.destroy();
+
+    let filePath = 'public/assets/images/dokter/' + dokter.gambar_dokter;
+    if (fs.existsSync(filePath)) {
+      deleteImage(filePath);
+    }
+
+    res.send({
+      message: "Dokter was deleted successfully!",
     });
+  } catch (err) {
+    console.error("Error deleting dokter:", err);
+    res.status(500).send({
+      message: "Could not delete dokter with id=" + id,
+    });
+  }
 };
+
+
 
 // Delete all dokters from the database.
 exports.deleteAll = (req, res) => {
