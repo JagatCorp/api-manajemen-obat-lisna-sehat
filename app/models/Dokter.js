@@ -7,6 +7,9 @@ module.exports = (sequelize, Sequelize) => {
     nama_dokter: {
       type: Sequelize.STRING,
     },
+    jk: {
+      type: Sequelize.ENUM("L", "P"),
+    },
     mulai_praktik: {
       type: Sequelize.TIME,
     },

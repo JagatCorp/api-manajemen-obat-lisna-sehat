@@ -15,6 +15,8 @@ exports.create = async (req, res) => {
       hari_praktik,
       spesialis_dokter_id,
       username,
+      password,
+      jk,
     } = req.body;
     if (
       !nama_dokter ||
@@ -22,7 +24,9 @@ exports.create = async (req, res) => {
       !selesai_praktik ||
       !hari_praktik ||
       !spesialis_dokter_id ||
-      !username
+      !username ||
+      !password ||
+      !jk
     ) {
       return res.status(400).send({ message: "All fields are required!" });
     }
@@ -58,6 +62,7 @@ exports.create = async (req, res) => {
       gambar_dokter: imageName,
       urlGambar: imageUrl,
       username,
+      jk,
       password: hashedPassword,
     };
 
@@ -160,8 +165,8 @@ exports.findOne = async (req, res) => {
 // Update a dokter by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const { nama_dokter, mulai_praktik, selesai_praktik, hari_praktik } =
-    req.body;
+  const { nama_dokter, mulai_praktik, selesai_praktik, hari_praktik, jk, username, password } =
+  req.body;
 
   // Menginisialisasi variabel untuk gambar
   let imageName, imageUrl, spesialis_dokter_id;
@@ -187,12 +192,28 @@ exports.update = async (req, res) => {
         message: `Cannot update dokter with id=${id}. Dokter not found!`,
       });
     }
+    // return res.status(404).send({
+    //   message: password,
+    // });
+
+    // Hash password securely using bcrypt
+    const saltRounds = 10; // Adjust salt rounds as needed (higher for stronger hashing)
+    let hashedPassword = '';
+    if(password != ''){
+      hashedPassword = await bcrypt.hash(password, saltRounds);
+    } else{
+      hashedPassword = dokter.password;
+    }
 
     // Memperbarui data dokter dengan data yang diberikan
     dokter.nama_dokter = nama_dokter;
     dokter.mulai_praktik = mulai_praktik;
     dokter.selesai_praktik = selesai_praktik;
     dokter.hari_praktik = hari_praktik;
+
+    dokter.jk = jk;
+    dokter.username = username;
+    dokter.password = hashedPassword;
 
     // Memeriksa apakah spesialis_dokter_id telah disertakan dalam form-data atau JSON
     if (req.body.spesialis_dokter_id) {
@@ -210,7 +231,7 @@ exports.update = async (req, res) => {
 
     res.send({ message: "dokter was updated successfully." });
   } catch (error) {
-    res.status(500).send({ message: "Error updating dokter with id=" + id });
+    res.status(500).send({ message: "Error updating dokter with id=" + id + ', ' + error });
   }
 };
 
