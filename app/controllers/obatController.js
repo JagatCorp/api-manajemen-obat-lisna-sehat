@@ -1,8 +1,8 @@
 const db = require("../models");
 const Obat = db.obat;
 const Satuan = db.satuan;
-const fs = require('fs');
-const pathModule = require('path'); // Ubah nama variabel menjadi pathModule
+const fs = require("fs");
+const pathModule = require("path"); // Ubah nama variabel menjadi pathModule
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
@@ -32,7 +32,10 @@ exports.create = async (req, res) => {
 
     // Proses file gambar yang diunggah
     const imageName = req.file.filename;
-    const imageUrl = `${req.protocol}://${req.get("host")}/obat/${imageName}`;
+    // local
+    // const imageUrl = `${req.protocol}://${req.get("host")}/obat/${imageName}`;
+    // production
+    const imageUrl = `https://api.lisnasehat.online/obat/${imageName}`;
 
     // Pastikan bahwa satuan_box dan satuan_sat yang diberikan ada dalam database
     const satuan_box_data = await Satuan.findByPk(satuan_box_id);
@@ -159,9 +162,12 @@ exports.update = async (req, res) => {
     // Jika pengguna mengunggah gambar baru, gunakan gambar yang baru diupdate
     if (file) {
       const imageName = file.filename;
-      const imageUrl = `${req.protocol}://${req.get("host")}/obat/${
-        file.filename
-      }`;
+      // local
+      // const imageUrl = `${req.protocol}://${req.get("host")}/obat/${
+      //   file.filename
+      // }`;
+      // production
+      const imageUrl = `https://api.lisnasehat.online/obat/${file.filename}`;
 
       obatData = {
         ...obatData,
@@ -173,13 +179,17 @@ exports.update = async (req, res) => {
     // Temukan obat yang akan diupdate
     const obat = await Obat.findByPk(id);
 
-    const filePath = pathModule.join(__dirname, '../../public/assets/images/obat/', obat.gambar_obat);
+    const filePath = pathModule.join(
+      __dirname,
+      "../../public/assets/images/obat/",
+      obat.gambar_obat
+    );
 
     try {
       fs.unlinkSync(filePath);
       console.log(`Deleted the file under ${filePath}`);
     } catch (err) {
-      console.log('An error occurred: ', err.message);
+      console.log("An error occurred: ", err.message);
     }
 
     if (!obat) {
@@ -188,7 +198,6 @@ exports.update = async (req, res) => {
 
     // Perbarui data obat dengan data baru, termasuk data yang tidak berubah
     await obat.update(obatData);
-    
 
     res.send({
       message: "Obat berhasil diubah.",
@@ -204,13 +213,17 @@ exports.delete = async (req, res) => {
 
   const obat = await Obat.findByPk(id);
 
-  const filePath = pathModule.join(__dirname, '../../public/assets/images/obat/', obat.gambar_obat);
+  const filePath = pathModule.join(
+    __dirname,
+    "../../public/assets/images/obat/",
+    obat.gambar_obat
+  );
 
   try {
     fs.unlinkSync(filePath);
     console.log(`Deleted the file under ${filePath}`);
   } catch (err) {
-    console.log('An error occurred: ', err.message);
+    console.log("An error occurred: ", err.message);
   }
 
   Obat.destroy({

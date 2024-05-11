@@ -22,9 +22,7 @@ exports.create = async (req, res) => {
     // }`;
 
     //production
-    const imageUrl = `https://lisnasehat.online/barangdistributor/${
-      file.filename
-    }`;
+    const imageUrl = `https://lisnasehat.online/barangdistributor/${file.filename}`;
 
     // Cek apakah satuan dengan id yang diberikan ada dalam database
     const satuan = await Satuan.findByPk(satuan_barangId);
@@ -162,9 +160,12 @@ exports.update = async (req, res) => {
     // Jika pengguna mengunggah gambar baru, gunakan gambar yang baru diupdate
     if (file) {
       const imageName = file.filename;
-      const imageUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/barangdistributor/${file.filename}`;
+      // local
+      // const imageUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/barangdistributor/${file.filename}`;
+      // production
+      const imageUrl = `https://api.lisnasehat.online/barangdistributor/${file.filename}`;
 
       barangdistributorData = {
         ...barangdistributorData,
