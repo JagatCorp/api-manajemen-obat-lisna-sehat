@@ -10,6 +10,9 @@ module.exports = (sequelize, Sequelize) => {
     jk: {
       type: Sequelize.ENUM("L", "P"),
     },
+    id_relasi: {
+      type: Sequelize.INTEGER,
+    },
 
     no_telp: {
       type: Sequelize.STRING,

@@ -13,6 +13,7 @@ exports.create = async (req, res) => {
       !req.body.alamat ||
       !req.body.jk ||
       !req.body.no_telp ||
+      !req.body.no_telp ||
       !req.body.tgl_lahir
     ) {
       return res.status(400).send({
@@ -21,9 +22,36 @@ exports.create = async (req, res) => {
       });
     }
 
+    // Memisahkan tanggal menjadi bagian-bagian
+    const tanggalPart = req.body.tgl_lahir.split("-");
+
+    // Menggabungkan bagian-bagian tanggal dalam format "MM-DD-YYYY"
+    const tanggalFormatted = `${tanggalPart[1]}${tanggalPart[2]}${tanggalPart[0]}`;
+
+    let password = '';
+    let username = '';
+    if (req.body.password == '') {
+      password = tanggalFormatted;
+    } else {
+      password = req.body.password;
+    }
+
+    if (req.body.username == '') {
+      username = req.body.no_telp;
+    } else {
+      username = req.body.username;
+    }
+
+    let id_relasi = '';
+    if (req.body.id_relasi == '') {
+      id_relasi = null;
+    } else {
+      id_relasi = req.body.id_relasi;
+    }
+
     // Hash password securely using bcrypt
     const saltRounds = 10; // Adjust salt rounds as needed (higher for stronger hashing)
-    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create pasien object with hashed password
     const pasien = {
@@ -34,8 +62,9 @@ exports.create = async (req, res) => {
       alergi: req.body.alergi,
       tgl_lahir: req.body.tgl_lahir,
       gol_darah: req.body.gol_darah,
-      username: req.body.username,
+      username: username,
       password: hashedPassword,
+      id_relasi: id_relasi,
     };
 
     // Save pasien to the database
@@ -59,6 +88,9 @@ const pasienerializer = new JSONAPISerializer("pasien", {
     "alergi",
     "tgl_lahir",
     "gol_darah",
+    "username",
+    "password",
+    "id_relasi",
   ],
   keyForAttribute: "underscore_case",
 });
@@ -148,25 +180,33 @@ exports.findOne = (req, res) => {
 exports.update = async (req, res) => {
   const id = req.params.id;
 
-  Pasien.update(req.body, {
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "pasien was updated successfully.",
-        });
-      } else {
-        res.send({
-          message: `Cannot update pasien with id=${id}. Maybe pasien was not found or req.body is empty!`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Error updating pasien with id=" + id,
+  try {
+    const pasien = await Pasien.findByPk(id);
+
+    // return res.status(200).send({
+    //   message: req.body.id_relasi,
+    // });
+
+    if (!pasien) {
+      return res.status(404).send({
+        message: `Cannot find pasien with id=${id}.`,
       });
-    });
+    }
+
+    if (req.body.password) {
+        req.body.password = await bcrypt.hash(req.body.password, 10);
+    }
+
+    if(req.body.id_relasi == 'null'){
+        req.body.id_relasi = null;
+    }
+
+    await pasien.update(req.body);
+    res.send({ message: "Pasien was updated successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error updating pasien, " + error });
+  }
 };
 
 // Delete a pasien with the specified id in the request
