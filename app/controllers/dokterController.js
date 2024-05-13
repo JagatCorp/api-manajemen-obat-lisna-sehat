@@ -253,7 +253,11 @@ exports.update = async (req, res) => {
     // Menyimpan perubahan ke dalam database
     await dokter.save();
 
-    res.send({ message: "dokter was updated successfully." });
+    if(req.body.profile){
+      res.send({ message: "dokter was updated successfully.", urlGambar: imageUrl});
+    } else {
+      res.send({ message: "dokter was updated successfully."});
+    }
   } catch (error) {
     res.status(500).send({ message: "Error updating dokter with id=" + id + ', ' + error });
   }
