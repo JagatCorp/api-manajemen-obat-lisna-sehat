@@ -21,6 +21,11 @@ exports.login = async (req, res) => {
         where: { username: username },
       });
 
+      // cek password
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
       const role = "dokter";
       const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
         expiresIn: "1h",
@@ -28,17 +33,17 @@ exports.login = async (req, res) => {
 
       res.json({ token, id: user.id, urlGambar: user.urlGambar });
     } else {
+      // cek password
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
       const role = "pasien";
       const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
         expiresIn: "1h",
       });
 
       res.json({ token, id: user.id });
-    }
-
-    // Jika tidak ditemukan di kedua model, kirim respons kesalahan
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: "Invalid username or password" });
     }
 
     // Tentukan peran berdasarkan model yang menemukan pengguna
