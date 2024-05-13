@@ -9,9 +9,96 @@ const { v4: uuidv4 } = require("uuid");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
 const { Op } = require("sequelize");
-const Spesialisdokter = require("../models/Spesialisdokter");
 
 // Create and Save a new transaksi_medis
+// exports.create = async (req, res) => {
+//   try {
+//     // Validate request
+//     // if (!req.body.pasien_id || !req.body.dokter_id) {
+//     //   return res.status(400).send({ message: "Data is required!" });
+//     // }
+
+//     // Find Dokter by dokter_id
+//     const dokter = await Dokter.findByPk(req.body.dokter_id);
+//     if (!dokter) {
+//       return res.status(404).send({ message: "Dokter not found!" });
+//     }
+
+//     const spesialis_dokter = await SpesialisDokter.findByPk(
+//       dokter.spesialis_dokter_id
+//     );
+//     if (!spesialis_dokter) {
+//       return res.status(404).send({ message: "Spesialis Dokter not found!" });
+//     }
+
+//     dokter["spesialis_dokter"] = spesialis_dokter;
+
+//     // Find Pasien by pasien_id
+//     const pasien = await Pasien.findByPk(req.body.pasien_id);
+//     if (!pasien) {
+//       return res.status(404).send({ message: "Pasien not found!" });
+//     }
+
+//     // Generate a unique filename for the QR code image using uuid
+//     const filename = `${uuidv4()}.png`;
+
+//     // Path untuk menyimpan gambar QR code di dalam direktori public
+//     const qrCodePath = path.join(
+//       __dirname,
+//       `../../public/assets/images/qrcode/${filename}`
+//     );
+
+//     // Create transaksi_medis object
+//     const transaksi_medis = {
+//       pasien_id: req.body.pasien_id,
+//       dokter_id: req.body.dokter_id,
+//       pasien: pasien.toJSON(),
+//       dokter: dokter.toJSON(),
+//       keluhan: req.body.keluhan,
+//       harga: req.body.harga,
+//     };
+
+//     // Generate QR code and save it as a file
+//     qr.toFile(qrCodePath, JSON.stringify(transaksi_medis), async (err) => {
+//       if (err) {
+//         console.error("Error generating QR code:", err);
+//         return res.status(500).send({ message: "Error generating QR code." });
+//       }
+
+//       // Generate URL for the QR code image local
+//       const qrCodeUrl = `${req.protocol}://${req.get(
+//         "host"
+//       )}/qrcode/${filename}`;
+//       // production
+//       // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+
+//       // Add QR code URL to the transaksi_medis object
+//       transaksi_medis.url_qrcode = qrCodeUrl;
+
+//       // Create the transaction record with QR code URL
+//       const createdTransaksiMedis = await TransaksiMedis.create(
+//         transaksi_medis
+//       );
+
+//       // Send the response with the QR code URL and associated data
+//       res.send({
+//         pasien_id: transaksi_medis.pasien_id,
+//         dokter_id: transaksi_medis.dokter_id,
+//         pasien: transaksi_medis.pasien,
+//         dokter: transaksi_medis.dokter,
+//         keluhan: transaksi_medis.keluhan,
+//         harga: transaksi_medis.harga,
+//         qrCodeUrl: qrCodeUrl,
+//       });
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res
+//       .status(500)
+//       .send({ message: error.message || "Error creating transaksi_medis." });
+//   }
+// };
+
 exports.create = async (req, res) => {
   try {
     // Validate request
@@ -19,18 +106,19 @@ exports.create = async (req, res) => {
     //   return res.status(400).send({ message: "Data is required!" });
     // }
 
-    // Find Dokter by dokter_id
-    const dokter = await Dokter.findByPk(req.body.dokter_id);
+    // Find Dokter by dokter_id including its associated SpesialisDokter
+    const dokter = await Dokter.findByPk(req.body.dokter_id, {
+      include: SpesialisDokter
+    });
     if (!dokter) {
       return res.status(404).send({ message: "Dokter not found!" });
     }
-    
-    const spesialis_dokter = await SpesialisDokter.findByPk(dokter.spesialis_dokter_id);
-    if (!spesialis_dokter) {
-      return res.status(404).send({ message: "Spesialis Dokter not found!" });
-    }
 
-    dokter['spesialis_dokter'] = spesialis_dokter;
+    // Check if spesialis dokter is available
+    let spesialisDokterInfo = {};
+    if (dokter.spesialisDokter) {
+      spesialisDokterInfo = dokter.spesialisDokter.toJSON();
+    }
 
     // Find Pasien by pasien_id
     const pasien = await Pasien.findByPk(req.body.pasien_id);
@@ -53,7 +141,10 @@ exports.create = async (req, res) => {
       dokter_id: req.body.dokter_id,
       pasien: pasien.toJSON(),
       dokter: dokter.toJSON(),
+      spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
       keluhan: req.body.keluhan,
+      harga: req.body.harga,
+      status: req.body.status,
     };
 
     // Generate QR code and save it as a file
@@ -64,11 +155,11 @@ exports.create = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      // const qrCodeUrl = `${req.protocol}://${req.get(
-      //   "host"
-      // )}/qrcode/${filename}`;
+      const qrCodeUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/qrcode/${filename}`;
       // production
-      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+      // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Add QR code URL to the transaksi_medis object
       transaksi_medis.url_qrcode = qrCodeUrl;
@@ -84,7 +175,10 @@ exports.create = async (req, res) => {
         dokter_id: transaksi_medis.dokter_id,
         pasien: transaksi_medis.pasien,
         dokter: transaksi_medis.dokter,
+        spesialis_dokter: transaksi_medis.spesialis_dokter, // Include spesialis dokter info
         keluhan: transaksi_medis.keluhan,
+        harga: transaksi_medis.harga,
+        status: transaksi_medis.status,
         qrCodeUrl: qrCodeUrl,
       });
     });
@@ -95,6 +189,8 @@ exports.create = async (req, res) => {
       .send({ message: error.message || "Error creating transaksi_medis." });
   }
 };
+
+
 
 exports.findAll = async (req, res) => {
   try {
@@ -359,6 +455,105 @@ exports.findOne = async (req, res) => {
 };
 
 // Update a transaksi_medis by the id in the request
+// exports.update = async (req, res) => {
+//   const id = req.params.id;
+
+//   try {
+//     // Retrieve the existing transaction data with associated dokter and pasien
+//     const existingTransaksiMedis = await TransaksiMedis.findByPk(id, {
+//       include: [Dokter, Pasien],
+//     });
+//     if (!existingTransaksiMedis) {
+//       return res.status(404).send({
+//         message: `Transaksi medis with id=${id} not found.`,
+//       });
+//     }
+
+//     // Update the transaction data in the database
+//     await TransaksiMedis.update(req.body, {
+//       where: { id: id },
+//     });
+
+//     // Prepare the data for the pasien and dokter in the QR code content
+//     // Find Dokter by dokter_id
+//     const dokter = await Dokter.findByPk(req.body.dokter_id);
+//     if (!dokter) {
+//       return res.status(404).send({ message: "Dokter not found!" });
+//     }
+
+//     // Find Pasien by pasien_id
+//     const pasien = await Pasien.findByPk(req.body.pasien_id);
+//     if (!pasien) {
+//       return res.status(404).send({ message: "Pasien not found!" });
+//     }
+//     if (existingTransaksiMedis.Pasien) {
+//       pasien = existingTransaksiMedis.Pasien.toJSON();
+//     }
+//     if (existingTransaksiMedis.Dokter) {
+//       dokter = existingTransaksiMedis.Dokter.toJSON();
+//     }
+
+//     // Generate a new UUID-based filename for the QR code image
+//     const filename = `${uuidv4()}.png`;
+
+//     // Path untuk menyimpan gambar QR code di dalam direktori public
+//     const qrCodePath = path.join(
+//       __dirname,
+//       `../../public/assets/images/qrcode/${filename}`
+//     );
+
+//     // Create transaksi_medis object for QR code content
+//     const transaksi_medis = {
+//       pasien_id: existingTransaksiMedis.pasien_id,
+//       dokter_id: existingTransaksiMedis.dokter_id,
+//       pasien: pasien,
+//       dokter: dokter,
+//       keluhan: existingTransaksiMedis.keluhan,
+//       harga: existingTransaksiMedis.harga,
+//       status: existingTransaksiMedis.status,
+//     };
+
+//     // Generate QR code and save it as a file
+//     qr.toFile(qrCodePath, JSON.stringify(transaksi_medis), async (err) => {
+//       if (err) {
+//         console.error("Error generating QR code:", err);
+//         return res.status(500).send({ message: "Error generating QR code." });
+//       }
+
+//       // Generate URL for the QR code image local
+//       const qrCodeUrl = `${req.protocol}://${req.get(
+//         "host"
+//       )}/qrcode/${filename}`;
+
+//       // production
+//       // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+
+//       // Update the QR code URL and filename in the database
+//       await TransaksiMedis.update(
+//         { url_qrcode: qrCodeUrl, filename: filename },
+//         { where: { id: id } }
+//       );
+
+//       // Send the response with updated transaction data and associated dokter and pasien
+//       res.send({
+//         message: "Transaksi medis and QR code were updated successfully.",
+//         transaksi_medis: {
+//           ...existingTransaksiMedis.toJSON(),
+//           url_qrcode: qrCodeUrl,
+//           keluhan: existingTransaksiMedis.keluhan,
+//           harga: existingTransaksiMedis.harga,
+//           status: existingTransaksiMedis.status,
+//         },
+//       });
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({
+//       message: "Error updating transaksi_medis with id=" + id,
+//     });
+//   }
+// };
+
 exports.update = async (req, res) => {
   const id = req.params.id;
 
@@ -390,11 +585,11 @@ exports.update = async (req, res) => {
     if (!pasien) {
       return res.status(404).send({ message: "Pasien not found!" });
     }
-    if (existingTransaksiMedis.Pasien) {
-      pasien = existingTransaksiMedis.Pasien.toJSON();
-    }
-    if (existingTransaksiMedis.Dokter) {
-      dokter = existingTransaksiMedis.Dokter.toJSON();
+    
+    // Check if spesialis dokter is available
+    let spesialisDokterInfo = {};
+    if (dokter.spesialisDokter) {
+      spesialisDokterInfo = dokter.spesialisDokter.toJSON();
     }
 
     // Generate a new UUID-based filename for the QR code image
@@ -412,7 +607,10 @@ exports.update = async (req, res) => {
       dokter_id: existingTransaksiMedis.dokter_id,
       pasien: pasien,
       dokter: dokter,
+      spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
       keluhan: existingTransaksiMedis.keluhan,
+      harga: existingTransaksiMedis.harga,
+      status: existingTransaksiMedis.status,
     };
 
     // Generate QR code and save it as a file
@@ -423,12 +621,9 @@ exports.update = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      // const qrCodeUrl = `${req.protocol}://${req.get(
-      //   "host"
-      // )}/qrcode/${filename}`;
-
-      // production
-      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+      const qrCodeUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/qrcode/${filename}`;
 
       // Update the QR code URL and filename in the database
       await TransaksiMedis.update(
@@ -442,7 +637,10 @@ exports.update = async (req, res) => {
         transaksi_medis: {
           ...existingTransaksiMedis.toJSON(),
           url_qrcode: qrCodeUrl,
+          spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
           keluhan: existingTransaksiMedis.keluhan,
+          harga: existingTransaksiMedis.harga,
+          status: existingTransaksiMedis.status,
         },
       });
     });
@@ -453,6 +651,7 @@ exports.update = async (req, res) => {
     });
   }
 };
+
 
 // Delete a transaksi_medis with the specified id in the request
 exports.delete = (req, res) => {
