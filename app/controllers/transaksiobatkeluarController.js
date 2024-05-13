@@ -11,7 +11,8 @@ exports.create = async (req, res) => {
   try {
     // Validate request
     if (
-      !req.body.nama_satuan
+      !req.body.nama_satuan ||
+      !req.body.harga
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -19,6 +20,7 @@ exports.create = async (req, res) => {
     // Create satuan object with layanan_id
     const satuan = {
       nama_satuan: req.body.nama_satuan,
+      harga: req.body.harga
     };
 
     // Save satuan to the database

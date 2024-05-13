@@ -16,7 +16,7 @@ const multer = require("multer");
 exports.create = async (req, res) => {
   try {
     // Pastikan bahwa semua data yang diperlukan ada
-    const { nama_obat, satuan_box_id, satuan_sat_id, qty_box, qty_sat, stok } =
+    const { nama_obat, satuan_box_id, satuan_sat_id, qty_box, qty_sat, stok, harga } =
       req.body;
     if (
       !nama_obat ||
@@ -24,6 +24,7 @@ exports.create = async (req, res) => {
       !satuan_sat_id ||
       !qty_box ||
       !qty_sat ||
+      !harga ||
       !stok ||
       !req.file
     ) {
@@ -33,9 +34,9 @@ exports.create = async (req, res) => {
     // Proses file gambar yang diunggah
     const imageName = req.file.filename;
     // local
-    // const imageUrl = `${req.protocol}://${req.get("host")}/obat/${imageName}`;
+    const imageUrl = `${req.protocol}://${req.get("host")}/obat/${imageName}`;
     // production
-    const imageUrl = `https://api.lisnasehat.online/obat/${imageName}`;
+    // const imageUrl = `https://api.lisnasehat.online/obat/${imageName}`;
 
     // Pastikan bahwa satuan_box dan satuan_sat yang diberikan ada dalam database
     const satuan_box_data = await Satuan.findByPk(satuan_box_id);
@@ -55,6 +56,7 @@ exports.create = async (req, res) => {
       satuan_sat_id,
       qty_box,
       qty_sat,
+      harga,
       stok,
       gambar_obat: imageName,
       urlGambar: imageUrl,
@@ -163,11 +165,11 @@ exports.update = async (req, res) => {
     if (file) {
       const imageName = file.filename;
       // local
-      // const imageUrl = `${req.protocol}://${req.get("host")}/obat/${
-      //   file.filename
-      // }`;
+      const imageUrl = `${req.protocol}://${req.get("host")}/obat/${
+        file.filename
+      }`;
       // production
-      const imageUrl = `https://api.lisnasehat.online/obat/${file.filename}`;
+      // const imageUrl = `https://api.lisnasehat.online/obat/${file.filename}`;
 
       obatData = {
         ...obatData,

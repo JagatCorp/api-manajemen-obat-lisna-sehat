@@ -16,6 +16,9 @@ module.exports = (sequelize, Sequelize) => {
     keluhan: {
       type: Sequelize.STRING,
     },
+    harga: {
+      type: Sequelize.INTEGER,
+    },
     status: {
       type: Sequelize.BOOLEAN,
       defaultValue: false,

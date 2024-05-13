@@ -18,7 +18,8 @@ exports.create = async (req, res) => {
       !req.body.stok_obat_sesudah ||
       !req.body.principle_id ||
       !req.body.obat_id ||
-      !req.body.jml_obat
+      !req.body.jml_obat ||
+      !req.body.harga
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -42,6 +43,7 @@ exports.create = async (req, res) => {
       principle_id: req.body.principle_id,
       obat_id: req.body.obat_id,
       jml_obat: req.body.jml_obat,
+      harga: req.body.harga
     };
 
     // Save transaksi_obat_masuk to the database
