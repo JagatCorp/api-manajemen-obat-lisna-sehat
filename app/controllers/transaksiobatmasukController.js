@@ -14,8 +14,8 @@ exports.create = async (req, res) => {
   try {
     // Validate request
     if (
-      !req.body.stok_obat_sebelum ||
-      !req.body.stok_obat_sesudah ||
+      // !req.body.stok_obat_sebelum ||
+      // !req.body.stok_obat_sesudah ||
       !req.body.principle_id ||
       !req.body.obat_id ||
       !req.body.jml_obat ||
@@ -29,22 +29,29 @@ exports.create = async (req, res) => {
     if (!principle) {
       return res.status(404).send({ message: "Principle not found!" });
     }
+    // return res.status(404).send({ message: req.body.createdAt == '' });
 
     // Find Obat by obat_id
     const obat = await Obat.findByPk(req.body.obat_id);
     if (!obat) {
       return res.status(404).send({ message: "Obat not found!" });
     }
+    const stok_obat_sesudah = obat.stok + req.body.jml_obat;
+    const stok_obat_sebelum = obat.stok;
 
     // Create transaksi_obat_masuk object with layanan_id
     const transaksi_obat_masuk = {
-      stok_obat_sebelum: req.body.stok_obat_sebelum,
-      stok_obat_sesudah: req.body.stok_obat_sesudah,
+      stok_obat_sebelum: stok_obat_sebelum,
+      stok_obat_sesudah: stok_obat_sesudah,
       principle_id: req.body.principle_id,
       obat_id: req.body.obat_id,
       jml_obat: req.body.jml_obat,
       harga: req.body.harga
     };
+
+    if(req.body.createdAt != ''){
+      transaksi_obat_masuk['createdAt'] = req.body.createdAt;
+    }
 
     // Save transaksi_obat_masuk to the database
     const createdTransaksiObatMasuk = await TransaksiObatMasuk.create(transaksi_obat_masuk);
@@ -88,7 +95,10 @@ exports.findAll = async (req, res) => {
         },
       ],
       attributes: {
-        exclude: ["createdAt", "updatedAt"],
+        exclude: [
+          // "createdAt", 
+          "updatedAt"
+        ],
       },
     };
 
