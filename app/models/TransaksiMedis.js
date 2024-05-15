@@ -23,6 +23,11 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.BOOLEAN,
       defaultValue: false,
     },
+  }, {
+    sequelize,
+    modelName: "TransaksiMedis",
+    paranoid: true, // Enable soft deletes
+    timestamps: true, // Enable timestamps (createdAt, updatedAt, deletedAt)
   });
 
   return TransaksiMedis;

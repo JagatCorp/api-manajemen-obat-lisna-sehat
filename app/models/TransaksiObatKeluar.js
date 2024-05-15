@@ -23,6 +23,11 @@ module.exports = (sequelize, Sequelize) => {
     jml_obat: {
       type: Sequelize.INTEGER,
     },
+  }, {
+    sequelize,
+    modelName: "TransaksiObatKeluar",
+    paranoid: true, // Enable soft deletes
+    timestamps: true, // Enable timestamps (createdAt, updatedAt, deletedAt)
   });
   
   return TransaksiObatKeluar;

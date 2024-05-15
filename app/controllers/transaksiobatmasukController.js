@@ -23,7 +23,7 @@ exports.create = async (req, res) => {
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
-    
+
     // Find Principle by principle_id
     const principle = await Principle.findByPk(req.body.principle_id);
     if (!principle) {
@@ -36,8 +36,12 @@ exports.create = async (req, res) => {
     if (!obat) {
       return res.status(404).send({ message: "Obat not found!" });
     }
-    const stok_obat_sesudah = obat.stok + req.body.jml_obat;
+
     const stok_obat_sebelum = obat.stok;
+    const stok_obat_sesudah = parseInt(obat.stok) + parseInt(req.body.jml_obat);
+
+    obat.update({ stok: stok_obat_sesudah });
+    
 
     // Create transaksi_obat_masuk object with layanan_id
     const transaksi_obat_masuk = {
@@ -49,7 +53,7 @@ exports.create = async (req, res) => {
       harga: req.body.harga
     };
 
-    if(req.body.createdAt != ''){
+    if (req.body.createdAt != '') {
       transaksi_obat_masuk['createdAt'] = req.body.createdAt;
     }
 
@@ -99,7 +103,7 @@ exports.findAll = async (req, res) => {
           // "createdAt", 
           "updatedAt"
         ],
-      },
+      },
     };
 
     const transaksi_obat_masuk = await TransaksiObatMasuk.findAll(searchQuery);
@@ -111,7 +115,7 @@ exports.findAll = async (req, res) => {
     const totalPages = Math.ceil(totalCount / pageSize);
 
     // const transaksi_obat_masukData = transaksi_obat_masukSerializer.serialize(transaksi_obat_masuk);
-    
+
     // Kirim response dengan data JSON dan informasi pagination
     res.send({
       data: transaksi_obat_masuk,
@@ -145,15 +149,15 @@ exports.findOne = async (req, res) => {
       ],
       attributes: {
         exclude: ["createdAt", "updatedAt"],
-      },
+      },
     });
-    
+
     if (!transaksi_obat_masuk) {
       return res.status(404).send({
         message: `Cannot find transaksi_obat_masuk with id=${id}.`,
       });
     }
-    
+
     // Find Principle by principle_id
     const principle = await Principle.findByPk(req.body.principle_id);
     if (!principle) {
@@ -201,8 +205,23 @@ exports.update = async (req, res) => {
 };
 
 // Delete a transaksi_obat_masuk with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
+
+  const transaksi_obat_masuk = await TransaksiObatMasuk.findByPk(id);
+
+  const obat = await Obat.findByPk(transaksi_obat_masuk.obat_id);
+
+  const stokObat = obat.stok;
+  const jml_obat = transaksi_obat_masuk.jml_obat; 
+
+  if(stokObat - jml_obat < 0){
+    res.status(500).send({
+      message: "Tidak bisa menghapus, Stok obat habis!",
+    });
+  } else {
+    obat.update({ stok: stokObat - jml_obat });
+  }
 
   TransaksiObatMasuk.destroy({
     where: { id: id },
