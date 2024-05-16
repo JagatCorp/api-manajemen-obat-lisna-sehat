@@ -16,7 +16,13 @@ module.exports = (sequelize, Sequelize) => {
     keluhan: {
       type: Sequelize.STRING,
     },
+    diagnosa_dokter: {
+      type: Sequelize.STRING,
+    },
     harga: {
+      type: Sequelize.INTEGER,
+    },
+    no_urut: {
       type: Sequelize.INTEGER,
     },
     status: {

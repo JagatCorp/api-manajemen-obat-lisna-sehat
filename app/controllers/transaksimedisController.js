@@ -144,8 +144,36 @@ exports.create = async (req, res) => {
       spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
       keluhan: req.body.keluhan,
       harga: req.body.harga,
-      status: req.body.status,
     };
+
+    // generate nomor urut antrian
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+    const cekTransaksiMedis = await TransaksiMedis.findAll({
+      where: {
+        createdAt: {
+          [Op.gte]: startOfDay,
+          [Op.lt]: endOfDay
+        },
+        dokter_id: req.body.dokter_id
+      }
+    });
+
+    if (cekTransaksiMedis.length == 0) {
+      transaksi_medis.no_urut = 1;
+    } else {
+      transaksi_medis.no_urut = ++cekTransaksiMedis.length;
+    }
+
+    if (req.body.status) {
+      transaksi_medis.status = req.body.status;
+    } else {
+      transaksi_medis.status = 0;
+    }
+
+    // return res.status(500).send({ message: transaksi_medis.no_urut });
 
     // Generate QR code and save it as a file
     qr.toFile(qrCodePath, JSON.stringify(transaksi_medis), async (err) => {
@@ -235,10 +263,16 @@ exports.findAll = async (req, res) => {
             "spesialis_dokter_id",
             "urlGambar",
           ],
+          include: [
+            {
+              model: SpesialisDokter,
+              attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+            },
+          ],
         },
       ],
       attributes: {
-        exclude: ["createdAt", "updatedAt"],
+        exclude: ["updatedAt"],
       },
     };
 
@@ -318,7 +352,7 @@ exports.findAllPasien = async (req, res) => {
         },
       ],
       attributes: {
-        exclude: ["createdAt", "updatedAt"],
+        exclude: ["updatedAt"],
       },
     };
 
@@ -659,6 +693,12 @@ exports.findOne = async (req, res) => {
             "spesialis_dokter_id",
             "urlGambar",
           ],
+          include: [
+            {
+              model: SpesialisDokter,
+              attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+            },
+          ],
         },
       ],
       attributes: {
@@ -812,7 +852,7 @@ exports.update = async (req, res) => {
     if (!pasien) {
       return res.status(404).send({ message: "Pasien not found!" });
     }
-    
+
     // Check if spesialis dokter is available
     let spesialisDokterInfo = {};
     if (dokter.spesialisDokter) {
