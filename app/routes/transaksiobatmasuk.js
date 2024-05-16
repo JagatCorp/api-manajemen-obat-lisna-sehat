@@ -8,6 +8,8 @@ module.exports = (app) => {
   
     // Retrieve all Tutorials
     router.get("/", transaksi_obat_masuk.findAll);
+
+    router.get("/delete", transaksi_obat_masuk.findAllDelete);
   
     // Retrieve all published satuan
     // router.get("/published", order.findAllPublished);
@@ -17,9 +19,13 @@ module.exports = (app) => {
   
     // Update a Tutorial with id
     router.put("/:id", transaksi_obat_masuk.update);
+
+    router.put("/restore/:id", transaksi_obat_masuk.restore);
   
     // Delete a Tutorial with id
     router.delete("/:id", transaksi_obat_masuk.delete);
+
+    router.delete("/hard/:id", transaksi_obat_masuk.hardDelete);
   
     // Delete all satuan
     router.delete("/", transaksi_obat_masuk.deleteAll);

@@ -11,9 +11,6 @@ module.exports = (sequelize, Sequelize) => {
     nama_obat: {
       type: Sequelize.STRING,
     },
-    qty_box: {
-      type: Sequelize.INTEGER,
-    },
     // satuan_box fk satuan
     qty_sat: {
         type: Sequelize.INTEGER,

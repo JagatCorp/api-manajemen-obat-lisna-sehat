@@ -16,13 +16,12 @@ const multer = require("multer");
 exports.create = async (req, res) => {
   try {
     // Pastikan bahwa semua data yang diperlukan ada
-    const { nama_obat, satuan_box_id, satuan_sat_id, qty_box, qty_sat, stok, harga } =
+    const { nama_obat, satuan_box_id, satuan_sat_id, qty_sat, stok, harga } =
       req.body;
     if (
       !nama_obat ||
       !satuan_box_id ||
       !satuan_sat_id ||
-      !qty_box ||
       !qty_sat ||
       !harga ||
       !stok ||
@@ -54,7 +53,6 @@ exports.create = async (req, res) => {
       nama_obat,
       satuan_box_id,
       satuan_sat_id,
-      qty_box,
       qty_sat,
       harga,
       stok,
