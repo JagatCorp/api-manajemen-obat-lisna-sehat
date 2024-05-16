@@ -3,55 +3,114 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 const Pasien = db.pasien;
 const Dokter = db.dokter;
+const Administrator = db.administrators;
 const { JWT_SECRET } = require("../configs/database"); // Mengimpor nilai JWT_SECRET dari file konfigurasi
 
 // Fungsi login
+// exports.login = async (req, res) => {
+//   try {
+//     const { username, password } = req.body;
+
+//     // Cari pengguna sebagai pasien
+//     let user = await Pasien.findOne({
+//       where: { username: username },
+//     });
+
+//     // Jika tidak ditemukan, coba cari sebagai dokter
+//     if (!user) {
+//       user = await Dokter.findOne({
+//         where: { username: username },
+//       });
+
+//       // cek password
+//       if (!user || !(await bcrypt.compare(password, user.password))) {
+//         return res.status(401).json({ message: "Invalid username or password" });
+//       }
+
+//       const role = "dokter";
+//       const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
+//         expiresIn: "1h",
+//       });
+
+//       res.json({ token, id: user.id, urlGambar: user.urlGambar });
+//     } else {
+//       // cek password
+//       if (!user || !(await bcrypt.compare(password, user.password))) {
+//         return res.status(401).json({ message: "Invalid username or password" });
+//       }
+
+//       const role = "pasien";
+//       const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
+//         expiresIn: "1h",
+//       });
+
+//       res.json({ token, id: user.id });
+//     }
+
+//     // Tentukan peran berdasarkan model yang menemukan pengguna
+//     // const role = user instanceof Pasien ? "pasien" : "dokter";
+
+//     // Buat token JWT
+
+//     // Kirim token sebagai respons
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Cari pengguna sebagai pasien
     let user = await Pasien.findOne({
       where: { username: username },
     });
 
-    // Jika tidak ditemukan, coba cari sebagai dokter
     if (!user) {
       user = await Dokter.findOne({
         where: { username: username },
       });
 
-      // cek password
+      if (!user) {
+        user = await Administrator.findOne({
+          where: { username: username },
+        });
+
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+          return res.status(401).json({ message: "Invalid username or password" });
+        }
+
+        const role = "lisAd";
+        const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
+          expiresIn: "1h",
+        });
+
+        return res.json({ token, id: user.id, role: role });
+      }
+
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
 
-      const role = "dokter";
+      const role = "lisDo";
       const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
         expiresIn: "1h",
       });
 
-      res.json({ token, id: user.id, urlGambar: user.urlGambar });
-    } else {
-      // cek password
-      if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: "Invalid username or password" });
-      }
-
-      const role = "pasien";
-      const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
-        expiresIn: "1h",
-      });
-
-      res.json({ token, id: user.id });
+      return res.json({ token, id: user.id, urlGambar: user.urlGambar, role: role });
     }
 
-    // Tentukan peran berdasarkan model yang menemukan pengguna
-    // const role = user instanceof Pasien ? "pasien" : "dokter";
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
 
-    // Buat token JWT
+    const role = "lisPa";
+    const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
-    // Kirim token sebagai respons
+    return res.json({ token, id: user.id, role: role });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
