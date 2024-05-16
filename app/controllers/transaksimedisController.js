@@ -266,6 +266,161 @@ exports.findAll = async (req, res) => {
   }
 };
 
+
+exports.findAllPasien = async (req, res) => {
+  try {
+    // Mendapatkan nilai halaman dan ukuran halaman dari query string (default ke halaman 1 dan ukuran 10 jika tidak disediakan)
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    // Menghitung offset berdasarkan halaman dan ukuran halaman
+    const offset = (page - 1) * pageSize;
+    const keyword = req.query.keyword || "";
+
+    // Mendapatkan pasien_id dari parameter URL
+    const pasienId = req.params.id;
+
+    // Query pencarian
+    const searchQuery = {
+      where: {
+        pasien_id: pasienId,
+        // [Op.or]: [
+        //   { '$keluhan$': { [Op.like]: `%${keyword}%` } },
+        //   { '$Pasien.alamat$': { [Op.like]: `%${keyword}%` } }
+        // ],
+      },
+      order: [["createdAt", "DESC"]],
+      limit: pageSize,
+      offset: offset,
+      include: [
+        {
+          model: Pasien,
+          attributes: [
+            "nama",
+            "jk",
+            "no_telp",
+            "alergi",
+            "tgl_lahir",
+            "gol_darah",
+            "alamat",
+          ],
+        },
+        {
+          model: Dokter,
+          attributes: [
+            "nama_dokter",
+            "mulai_praktik",
+            "selesai_praktik",
+            "hari_praktik",
+            "spesialis_dokter_id",
+            "urlGambar",
+          ],
+        },
+      ],
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
+    };
+
+    const transaksi_medis = await TransaksiMedis.findAll(searchQuery);
+    const totalCount = await TransaksiMedis.count({
+      where: searchQuery.where
+    });
+
+    // Menghitung total jumlah halaman berdasarkan ukuran halaman
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Kirim response dengan data JSON dan informasi pagination
+    res.send({
+      data: transaksi_medis,
+      currentPage: page,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCount: totalCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving transaksi_medis." });
+  }
+};
+
+exports.findAllDokter = async (req, res) => {
+  try {
+    // Mendapatkan nilai halaman dan ukuran halaman dari query string (default ke halaman 1 dan ukuran 10 jika tidak disediakan)
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    // Menghitung offset berdasarkan halaman dan ukuran halaman
+    const offset = (page - 1) * pageSize;
+    const keyword = req.query.keyword || "";
+
+    // Mendapatkan pasien_id dari parameter URL
+    const dokterId = req.params.id;
+
+    // Query pencarian
+    const searchQuery = {
+      where: {
+        dokter_id: dokterId,
+        // [Op.or]: [
+        //   { '$Pasien.nama$': { [Op.like]: `%${keyword}%` } },
+        //   { '$Pasien.alamat$': { [Op.like]: `%${keyword}%` } }
+        // ],
+      },
+      order: [["createdAt", "DESC"]],
+      limit: pageSize,
+      offset: offset,
+      include: [
+        {
+          model: Pasien,
+          attributes: [
+            "nama",
+            "jk",
+            "no_telp",
+            "alergi",
+            "tgl_lahir",
+            "gol_darah",
+            "alamat",
+          ],
+        },
+        {
+          model: Dokter,
+          attributes: [
+            "nama_dokter",
+            "mulai_praktik",
+            "selesai_praktik",
+            "hari_praktik",
+            "spesialis_dokter_id",
+            "urlGambar",
+          ],
+        },
+      ],
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
+    };
+
+    const transaksi_medis = await TransaksiMedis.findAll(searchQuery);
+    const totalCount = await TransaksiMedis.count({
+      where: searchQuery.where
+    });
+
+    // Menghitung total jumlah halaman berdasarkan ukuran halaman
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Kirim response dengan data JSON dan informasi pagination
+    res.send({
+      data: transaksi_medis,
+      currentPage: page,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCount: totalCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving transaksi_medis." });
+  }
+};
+
 // exports.findQrCode = async (req, res) => {
 //   const idPasien = req.query.id_pasien; // Menggunakan req.query untuk mendapatkan id_pasien dari query string
 
@@ -350,12 +505,75 @@ exports.findAll = async (req, res) => {
 //   }
 // };
 // find by pasien id
+// exports.findOneAll = async (req, res) => {
+//   try {
+//     const pasienId = req.params.id;
+
+//     const transaksi_medis = await TransaksiMedis.findAll({
+//       where: { pasien_id: pasienId },
+//       order: [["createdAt", "DESC"]],
+//       include: [
+//         {
+//           model: Pasien,
+//           attributes: [
+//             "nama",
+//             "jk",
+//             "no_telp",
+//             "alergi",
+//             "tgl_lahir",
+//             "gol_darah",
+//             "alamat",
+//           ],
+//         },
+//         {
+//           model: Dokter,
+//           attributes: [
+//             "nama_dokter",
+//             "mulai_praktik",
+//             "selesai_praktik",
+//             "hari_praktik",
+//             "spesialis_dokter_id",
+//             "urlGambar",
+//           ],
+//         },
+//       ],
+//       attributes: {
+//         exclude: ["updatedAt"],
+//       },
+//     });
+
+//     if (!transaksi_medis) {
+//       return res.status(404).send({
+//         message: `Cannot find transaksi_medis with pasien_id=${pasienId}.`,
+//       });
+//     }
+
+//     res.send(transaksi_medis);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({
+//       message: `Error retrieving transaksi_medis with pasien_id=${pasienId}`,
+//     });
+//   }
+// };
+
 exports.findOneAll = async (req, res) => {
   try {
     const pasienId = req.params.id;
+    const keyword = req.query.keyword || "";
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * pageSize;
 
-    const transaksi_medis = await TransaksiMedis.findAll({
-      where: { pasien_id: pasienId },
+    const whereClause = {
+      pasien_id: pasienId,
+      keluhan: {
+        [Op.like]: `%${keyword}%`
+      }
+    };
+
+    const { count, rows } = await TransaksiMedis.findAndCountAll({
+      where: whereClause,
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -385,15 +603,24 @@ exports.findOneAll = async (req, res) => {
       attributes: {
         exclude: ["updatedAt"],
       },
+      limit: pageSize,
+      offset: offset,
     });
 
-    if (!transaksi_medis) {
+    if (rows.length === 0) {
       return res.status(404).send({
         message: `Cannot find transaksi_medis with pasien_id=${pasienId}.`,
       });
     }
 
-    res.send(transaksi_medis);
+    const totalPages = Math.ceil(count / pageSize);
+
+    res.send({
+      data: rows,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCount: count,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send({
@@ -401,13 +628,12 @@ exports.findOneAll = async (req, res) => {
     });
   }
 };
-
 exports.findOne = async (req, res) => {
   try {
     const pasienId = req.params.id;
 
     const transaksi_medis = await TransaksiMedis.findOne({
-      where: { pasien_id: pasienId },
+      where: { id: pasienId },
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -426,6 +652,7 @@ exports.findOne = async (req, res) => {
           model: Dokter,
           attributes: [
             "nama_dokter",
+            "jk",
             "mulai_praktik",
             "selesai_praktik",
             "hari_praktik",
