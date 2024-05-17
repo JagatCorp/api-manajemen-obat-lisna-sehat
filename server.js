@@ -25,6 +25,7 @@ db.sequelize
 const corsOptions = {
   origin: [
     "https://lisnasehat.online",
+    "https://kop-dayalisna.online",
     "http://localhost:5000",
     "http://localhost:3000",
     // "http://192.168.1.7:3000",

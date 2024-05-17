@@ -19,14 +19,17 @@ module.exports = (sequelize, Sequelize) => {
     diagnosa_dokter: {
       type: Sequelize.STRING,
     },
-    harga: {
+    harga_total: {
+      type: Sequelize.INTEGER,
+    },
+    harga_dokter: {
       type: Sequelize.INTEGER,
     },
     no_urut: {
       type: Sequelize.INTEGER,
     },
     status: {
-      type: Sequelize.BOOLEAN,
+      type: Sequelize.STRING,
       defaultValue: false,
     },
   }, {

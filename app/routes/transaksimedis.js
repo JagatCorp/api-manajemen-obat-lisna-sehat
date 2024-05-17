@@ -24,6 +24,8 @@ module.exports = (app) => {
   // Update a Tutorial with id
   router.put("/:id", transaksi_medis.update);
 
+  router.post("/selesai/:id", transaksi_medis.updateSelesai);
+
   // Delete a Tutorial with id
   router.delete("/:id", transaksi_medis.delete);
 

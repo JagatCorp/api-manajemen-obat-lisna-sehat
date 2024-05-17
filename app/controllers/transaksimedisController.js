@@ -430,7 +430,7 @@ exports.findAllDokter = async (req, res) => {
         },
       ],
       attributes: {
-        exclude: ["createdAt", "updatedAt"],
+        exclude: ["updatedAt"],
       },
     };
 
@@ -665,10 +665,10 @@ exports.findOneAll = async (req, res) => {
 };
 exports.findOne = async (req, res) => {
   try {
-    const pasienId = req.params.id;
+    const id = req.params.id;
 
     const transaksi_medis = await TransaksiMedis.findOne({
-      where: { id: pasienId },
+      where: { id: id },
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -709,7 +709,7 @@ exports.findOne = async (req, res) => {
 
     if (!transaksi_medis) {
       return res.status(404).send({
-        message: `Cannot find transaksi_medis with pasien_id=${pasienId}.`,
+        message: `Cannot find transaksi_medis with pasien_id=${id}.`,
       });
     }
 
@@ -830,6 +830,7 @@ exports.update = async (req, res) => {
     const existingTransaksiMedis = await TransaksiMedis.findByPk(id, {
       include: [Dokter, Pasien],
     });
+
     if (!existingTransaksiMedis) {
       return res.status(404).send({
         message: `Transaksi medis with id=${id} not found.`,
@@ -917,6 +918,31 @@ exports.update = async (req, res) => {
     res.status(500).send({
       message: "Error updating transaksi_medis with id=" + id,
     });
+  }
+};
+
+exports.updateSelesai = async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const existingTransaksiMedis = await TransaksiMedis.findByPk(id, {
+      include: [Dokter, Pasien],
+    });
+
+    return res.send({ message: existingTransaksiMedis });
+    
+    if (!existingTransaksiMedis) {
+      return res.status(404).send({ message: `Transaksi medis with id=${id} not found.` });
+    }
+
+    await existingTransaksiMedis.update(req.body, {
+      where: { id: id },
+    });
+
+    res.send({ message: "Transaksi medis was updated successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: `Error updating transaksi_medis with id=${id}: ${error.message}` });
   }
 };
 
