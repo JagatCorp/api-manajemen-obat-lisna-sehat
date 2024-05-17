@@ -8,8 +8,10 @@ module.exports = (app) => {
   
     // Retrieve all Tutorials
     router.get("/", transaksi_obat_keluar.findAll);
+
+    router.get("/all/:id", transaksi_obat_keluar.findOneAll);
   
-    // Retrieve all published satuan
+    // Retrieve all published transaksi_obat_keluar
     // router.get("/published", order.findAllPublished);
   
     // Retrieve a single Tutorial with id
@@ -21,7 +23,7 @@ module.exports = (app) => {
     // Delete a Tutorial with id
     router.delete("/:id", transaksi_obat_keluar.delete);
   
-    // Delete all satuan
+    // Delete all transaksi_obat_keluar
     router.delete("/", transaksi_obat_keluar.deleteAll);
   
     app.use("/api/transaksi_obat_keluar", router);

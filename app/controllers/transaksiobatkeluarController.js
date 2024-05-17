@@ -1,39 +1,60 @@
 const db = require("../models");
 const TransaksiObatKeluar = db.transaksi_obat_keluar;
+const Obat = db.obat;
+
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
 const { Op } = require("sequelize");
 
-// Create and Save a new satuan
+// Create and Save a new transaksi_obat_keluar
 exports.create = async (req, res) => {
   try {
     // Validate request
     if (
-      !req.body.nama_satuan ||
+      !req.body.transaksi_obat_keluar_id ||
+      !req.body.obat_id ||
+      !req.body.pasien_id ||
+      !req.body.jml_obat ||
       !req.body.harga
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
 
-    // Create satuan object with layanan_id
-    const satuan = {
-      nama_satuan: req.body.nama_satuan,
+    // Find Obat by obat_id
+    const obat = await Obat.findByPk(req.body.obat_id);
+    if (!obat) {
+      return res.status(404).send({ message: "Obat not found!" });
+    }
+
+    const stok_obat_sebelum = obat.stok;
+    const stok_obat_sesudah = parseInt(obat.stok) + parseInt(req.body.jml_obat);
+
+    obat.update({ stok: stok_obat_sesudah });
+
+    // Create transaksi_obat_keluar object with layanan_id
+    const transaksi_obat_keluar = {
+      stok_obat_sebelum: stok_obat_sebelum,
+      stok_obat_sesudah: stok_obat_sesudah,
+      transaksi_obat_keluar_id: req.body.transaksi_obat_keluar_id,
+      obat_id: req.body.obat_id,
+      pasien_id: req.body.pasien_id,
+      jml_obat: req.body.jml_obat,
       harga: req.body.harga
     };
 
-    // Save satuan to the database
-    const createdSatuan = await Satuan.create(satuan);
-    res.send(createdSatuan);
+    // Save transaksi_obat_keluar to the database
+    const createdTransaksiObatKeluar = await TransaksiObatKeluar.create(transaksi_obat_keluar);
+    res.send(createdTransaksiObatKeluar);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: error.message || "Error creating satuan." });
+    res.status(500).send({ message: error.message || "Error creating transaksi obat keluar." });
   }
 };
 
-const satuanSerializer = new JSONAPISerializer('satuan', {
-  attributes: ['nama_satuan'],
+const obatKeluarSerializer = new JSONAPISerializer('transaksi_obat_keluar', {
+  attributes: ['stok_obat_sebelum', 'stok_obat_sesudah', 'obat_id', 'pasien_id', 'jml_obat', 'harga'],
   keyForAttribute: 'underscore_case',
 });
 
@@ -50,11 +71,11 @@ exports.findAll = async (req, res) => {
 
     // Query pencarian
     const searchQuery = {
-      where: {
-        [Op.or]: [
-          { nama_satuan: { [Op.like]: `%${keyword}%` } },
-        ],
-      },
+      // where: {
+      //   [Op.or]: [
+      //     { nama: { [Op.like]: `%${keyword}%` } },
+      //   ],
+      // },
       limit: pageSize,
       offset: offset,
       attributes: {
@@ -62,19 +83,19 @@ exports.findAll = async (req, res) => {
       },
     };
 
-    const satuan = await Satuan.findAll(searchQuery);
-    const totalCount = await Satuan.count(searchQuery);
-    // Menghitung total jumlah satuan
-    // const totalCount = await Satuan.count();
+    const transaksi_obat_keluar = await TransaksiObatKeluar.findAll(searchQuery);
+    const totalCount = await TransaksiObatKeluar.count(searchQuery);
+    // Menghitung total jumlah transaksi_obat_keluar
+    // const totalCount = await TransaksiObatKeluar.count();
 
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const satuanData = satuanSerializer.serialize(satuan);
+    const obatKeluarData = obatKeluarSerializer.serialize(transaksi_obat_keluar);
     
     // Kirim response dengan data JSON dan informasi pagination
     res.send({
-      data: satuanData,
+      data: obatKeluarData,
       currentPage: page,
       totalPages: totalPages,
       pageSize: pageSize,
@@ -82,7 +103,7 @@ exports.findAll = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Error retrieving satuans." });
+    res.status(500).send({ message: "Error retrieving transaksi obat keluar." });
   }
 };
 
@@ -92,90 +113,123 @@ exports.findOne = async (req, res) => {
   const id = req.params.id;
   
   try {
-    const satuan = await Satuan.findByPk(id);
+    const transaksi_obat_keluar = await TransaksiObatKeluar.findByPk(id);
     
-    if (!satuan) {
+    if (!transaksi_obat_keluar) {
       return res.status(404).send({
-        message: `Cannot find satuan with id=${id}.`,
+        message: `Cannot find transaksi obat keluar with id=${id}.`,
       });
     }
 
-    const serializedSatuan = satuanSerializer.serialize(satuan);
+    const serializedTransaksiObatKeluar = obatKeluarSerializer.serialize(transaksi_obat_keluar);
     
-    res.send(serializedSatuan);
+    res.send(serializedTransaksiObatKeluar);
   } catch (error) {
     console.error(error);
     res.status(500).send({
-      message: `Error retrieving satuan with id=${id}`,
+      message: `Error retrieving transaksi obat keluar with id=${id}`,
     });
   }
 };
 
-// Update a satuan by the id in the request
+exports.findOneAll = async (req, res) => {
+  const id = req.params.id;
+  
+  try {
+    const transaksi_obat_keluar = await TransaksiObatKeluar.findAll({
+      where: {
+        transaksi_medis_id: id
+      },
+      include: [
+        {
+          model: Obat,
+          attributes: ["nama_obat"],
+        },
+      ],
+    });
+    
+    if (!transaksi_obat_keluar) {
+      return res.status(404).send({
+        message: `Cannot find transaksi obat keluar with id=${id}.`,
+      });
+    }
+
+    // const serializedTransaksiObatKeluar = obatKeluarSerializer.serialize(transaksi_obat_keluar);
+    
+    res.send({data: transaksi_obat_keluar});
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: `Error retrieving transaksi obat keluar with id=${id}`,
+    });
+  }
+};
+
+// Update a transaksi obat keluar by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
 
-  Satuan.update(req.body, {
+  TransaksiObatKeluar.update(req.body, {
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "satuan was updated successfully.",
+          message: "transaksi obat keluar was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update satuan with id=${id}. Maybe satuan was not found or req.body is empty!`,
+          message: `Cannot update transaksi obat keluar with id=${id}. Maybe transaksi obat keluar was not found or req.body is empty!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: "Error updating satuan with id=" + id,
+        message: "Error updating transaksi obat keluar with id=" + id,
       });
     });
 };
 
-// Delete a satuan with the specified id in the request
+// Delete a transaksi obat keluar with the specified id in the request
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  Satuan.destroy({
+  TransaksiObatKeluar.destroy({
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "satuan was deleted successfully!",
+          message: "transaksi obat keluar was deleted successfully!",
         });
       } else {
         res.send({
-          message: `Cannot delete satuan with id=${id}. Maybe satuan was not found!`,
+          message: `Cannot delete transaksi obat keluar with id=${id}. Maybe transaksi obat keluar was not found!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: "Could not delete satuan with id=" + id,
+        message: "Could not delete transaksi obat keluar with id=" + id,
       });
     });
 };
 
-// Delete all satuans from the database.
+// Delete all transaksi obat keluars from the database.
 exports.deleteAll = (req, res) => {
-  Satuan.destroy({
+  TransaksiObatKeluar.destroy({
     where: {},
     truncate: false,
   })
     .then((nums) => {
       res.send({
-        message: `${nums} satuans were deleted successfully!`,
+        message: `${nums} transaksi obat keluars were deleted successfully!`,
       });
     })
     .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while removing all satuans.",
+          err.message || "Some error occurred while removing all transaksi obat keluars.",
       });
     });
 };

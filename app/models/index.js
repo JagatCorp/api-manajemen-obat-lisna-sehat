@@ -57,6 +57,9 @@ db.order.belongsTo(db.layanan, { foreignKey: "layananId" });
 db.obat.belongsTo(db.satuan, { as: "satuan_box", foreignKey: "satuan_box_id" });
 db.obat.belongsTo(db.satuan, { as: "satuan_sat", foreignKey: "satuan_sat_id" });
 
+// relasi table transaksi obat keluar ke transaksi medis
+db.transaksi_obat_keluar.belongsTo(db.transaksi_medis, { foreignKey: "transaksi_medis_id" });
+
 // relasi table transaksi obat keluar dan masuk ke obat
 db.transaksi_obat_keluar.belongsTo(db.obat, { foreignKey: "obat_id" });
 db.transaksi_obat_masuk.belongsTo(db.obat, { foreignKey: "obat_id" });

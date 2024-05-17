@@ -1,6 +1,7 @@
 const db = require("../models");
 const TransaksiMedis = db.transaksi_medis;
 const SpesialisDokter = db.spesialisdokter;
+const TransaksiObatKeluar = db.transaksi_obat_keluar;
 const Dokter = db.dokter;
 const Pasien = db.pasien;
 const qr = require("qrcode");
