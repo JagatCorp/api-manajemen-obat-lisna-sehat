@@ -109,7 +109,7 @@ exports.create = async (req, res) => {
 
     // Find Dokter by dokter_id including its associated SpesialisDokter
     const dokter = await Dokter.findByPk(req.body.dokter_id, {
-      include: SpesialisDokter
+      include: SpesialisDokter,
     });
     if (!dokter) {
       return res.status(404).send({ message: "Dokter not found!" });
@@ -150,17 +150,21 @@ exports.create = async (req, res) => {
 
     // generate nomor urut antrian
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
     const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
 
     const cekTransaksiMedis = await TransaksiMedis.findAll({
       where: {
         createdAt: {
           [Op.gte]: startOfDay,
-          [Op.lt]: endOfDay
+          [Op.lt]: endOfDay,
         },
-        dokter_id: req.body.dokter_id
-      }
+        dokter_id: req.body.dokter_id,
+      },
     });
 
     if (cekTransaksiMedis.length == 0) {
@@ -220,8 +224,6 @@ exports.create = async (req, res) => {
       .send({ message: error.message || "Error creating transaksi_medis." });
   }
 };
-
-
 
 exports.findAll = async (req, res) => {
   try {
@@ -303,7 +305,6 @@ exports.findAll = async (req, res) => {
   }
 };
 
-
 exports.findAllPasien = async (req, res) => {
   try {
     // Mendapatkan nilai halaman dan ukuran halaman dari query string (default ke halaman 1 dan ukuran 10 jika tidak disediakan)
@@ -361,7 +362,7 @@ exports.findAllPasien = async (req, res) => {
 
     const transaksi_medis = await TransaksiMedis.findAll(searchQuery);
     const totalCount = await TransaksiMedis.count({
-      where: searchQuery.where
+      where: searchQuery.where,
     });
 
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
@@ -438,7 +439,7 @@ exports.findAllDokter = async (req, res) => {
 
     const transaksi_medis = await TransaksiMedis.findAll(searchQuery);
     const totalCount = await TransaksiMedis.count({
-      where: searchQuery.where
+      where: searchQuery.where,
     });
 
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
@@ -605,8 +606,8 @@ exports.findOneAll = async (req, res) => {
     const whereClause = {
       pasien_id: pasienId,
       keluhan: {
-        [Op.like]: `%${keyword}%`
-      }
+        [Op.like]: `%${keyword}%`,
+      },
     };
 
     const { count, rows } = await TransaksiMedis.findAndCountAll({
@@ -881,6 +882,7 @@ exports.update = async (req, res) => {
       spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
       keluhan: existingTransaksiMedis.keluhan,
       harga: existingTransaksiMedis.harga,
+      diagnosa_dokter: existingTransaksiMedis.diagnosa_dokter,
       status: existingTransaksiMedis.status,
     };
 
@@ -911,6 +913,7 @@ exports.update = async (req, res) => {
           spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
           keluhan: existingTransaksiMedis.keluhan,
           harga: existingTransaksiMedis.harga,
+          diagnosa_dokter: existingTransaksiMedis.diagnosa_dokter,
           status: existingTransaksiMedis.status,
         },
       });
@@ -932,9 +935,11 @@ exports.updateSelesai = async (req, res) => {
     });
 
     return res.send({ message: existingTransaksiMedis });
-    
+
     if (!existingTransaksiMedis) {
-      return res.status(404).send({ message: `Transaksi medis with id=${id} not found.` });
+      return res
+        .status(404)
+        .send({ message: `Transaksi medis with id=${id} not found.` });
     }
 
     await existingTransaksiMedis.update(req.body, {
@@ -944,10 +949,13 @@ exports.updateSelesai = async (req, res) => {
     res.send({ message: "Transaksi medis was updated successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: `Error updating transaksi_medis with id=${id}: ${error.message}` });
+    res
+      .status(500)
+      .send({
+        message: `Error updating transaksi_medis with id=${id}: ${error.message}`,
+      });
   }
 };
-
 
 // Delete a transaksi_medis with the specified id in the request
 exports.delete = (req, res) => {
