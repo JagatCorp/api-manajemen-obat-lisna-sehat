@@ -145,6 +145,7 @@ exports.create = async (req, res) => {
       spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
       keluhan: req.body.keluhan,
       harga: req.body.harga,
+      diagnosa_dokter: req.body.diagnosa_dokter,
     };
 
     // generate nomor urut antrian
@@ -207,6 +208,7 @@ exports.create = async (req, res) => {
         spesialis_dokter: transaksi_medis.spesialis_dokter, // Include spesialis dokter info
         keluhan: transaksi_medis.keluhan,
         harga: transaksi_medis.harga,
+        diagnosa_dokter: transaksi_medis.diagnosa_dokter,
         status: transaksi_medis.status,
         qrCodeUrl: qrCodeUrl,
       });
