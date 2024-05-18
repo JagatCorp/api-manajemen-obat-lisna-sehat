@@ -74,10 +74,6 @@ db.dokter.belongsTo(db.spesialisdokter, { foreignKey: "spesialis_dokter_id" });
 db.transaksidistributors.belongsTo(db.barangdistributors, {
   foreignKey: "barang_distributorId",
 });
-// relasi table transaksidistributors ke pembelidistributors
-db.transaksidistributors.belongsTo(db.pembelidistributors, {
-  foreignKey: "pembeli_distributorId",
-});
 
 // relasi table barangdistributors ke satuan
 db.barangdistributors.belongsTo(db.satuan, {
