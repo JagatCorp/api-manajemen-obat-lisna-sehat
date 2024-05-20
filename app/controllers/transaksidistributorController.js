@@ -4,7 +4,7 @@ const Barangdistributor = db.barangdistributors;
 const Pembelidistributors = db.pembelidistributors;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 
 // Create and Save a new transaksidistributor
 exports.create = async (req, res) => {
@@ -12,8 +12,10 @@ exports.create = async (req, res) => {
     // Validate request
     if (
       !req.body.jml_barang ||
-      !req.body.barang_distributorId ||
-      !req.body.pembeli_distributorId
+      !req.body.harga ||
+      !req.body.status ||
+      !req.body.nama_pembeli ||
+      !req.body.barang_distributorId
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -25,20 +27,14 @@ exports.create = async (req, res) => {
     if (!dataBarangdistributor) {
       return res.status(404).send({ message: "Barangdistributor not found!" });
     }
-    const dataPembelidistributors = await Pembelidistributors.findByPk(
-      req.body.pembeli_distributorId
-    );
-    if (!dataPembelidistributors) {
-      return res
-        .status(404)
-        .send({ message: "Pembelidistributors not found!" });
-    }
 
     // Create transaksidistributor object with Barangdistributor_id
     const transaksidistributor = {
       jml_barang: req.body.jml_barang,
+      harga: req.body.harga,
+      status: req.body.status,
       barang_distributorId: req.body.barang_distributorId,
-      pembeli_distributorId: req.body.pembeli_distributorId,
+      nama_pembeli: req.body.nama_pembeli,
       // Assign Barangdistributor_id from request body
     };
 
@@ -63,22 +59,27 @@ exports.findAll = async (req, res) => {
     const offset = (page - 1) * pageSize;
 
     // Jika tidak ada query pencarian
+    const keyword = req.query.keyword || "";
     const searchQuery = {
+      where: {
+        [Op.or]: [
+          { jml_barang: { [Op.like]: `%${keyword}%` } },
+          { harga: { [Op.like]: `%${keyword}%` } },
+          { status: { [Op.like]: `%${keyword}%` } },
+          { nama_pembeli: { [Op.like]: `%${keyword}%` } },
+        ],
+      },
       limit: pageSize,
       offset: offset,
       include: [
         {
           model: Barangdistributor,
-          attributes: ["nama_barang"],
-        },
-        {
-          model: Pembelidistributors,
-          attributes: ["nama_pembeli"],
+          attributes: ["nama_barang", "urlGambar"],
         },
       ],
-      attributes: {
-        exclude: ["createdAt", "updatedAt"],
-      },
+      // attributes: {
+      //   exclude: ["createdAt", "updatedAt"],
+      // },
     };
 
     const transaksidistributor = await Transaksidistributor.findAll(
@@ -104,12 +105,21 @@ exports.findAll = async (req, res) => {
 };
 
 // Find a single admin with an id
-
 exports.findOne = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const transaksidistributor = await Transaksidistributor.findByPk(id);
+    const transaksidistributor = await Transaksidistributor.findByPk(id, {
+      include: [
+        {
+          model: Barangdistributor,
+          attributes: ["nama_barang", "urlGambar"],
+        },
+      ],
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
+    });
 
     if (!transaksidistributor) {
       return res.status(404).send({
@@ -117,10 +127,7 @@ exports.findOne = async (req, res) => {
       });
     }
 
-    const serializedTransaksidistributor =
-      transaksidistributorSerializer.serialize(transaksidistributor);
-
-    res.send(serializedTransaksidistributor);
+    res.send(transaksidistributor);
   } catch (error) {
     console.error(error);
     res.status(500).send({
@@ -128,7 +135,6 @@ exports.findOne = async (req, res) => {
     });
   }
 };
-
 // Update a transaksidistributor by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
