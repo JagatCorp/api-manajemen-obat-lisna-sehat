@@ -13,11 +13,10 @@ exports.create = async (req, res) => {
   try {
     // Validate request
     if (
-      !req.body.transaksi_obat_keluar_id ||
+      !req.body.transaksi_medis_id ||
       !req.body.obat_id ||
-      !req.body.pasien_id ||
       !req.body.jml_obat ||
-      !req.body.harga
+      !req.body.dosis
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -29,7 +28,12 @@ exports.create = async (req, res) => {
     }
 
     const stok_obat_sebelum = obat.stok;
-    const stok_obat_sesudah = parseInt(obat.stok) + parseInt(req.body.jml_obat);
+    const stok_obat_sesudah = parseInt(obat.stok) - parseInt(req.body.jml_obat);
+
+    const harga = obat.harga * parseInt(req.body.jml_obat);
+
+    // return res.status(500).json({messages: stok_obat_sesudah});
+    // return res.status(500).json({messages: harga});
 
     obat.update({ stok: stok_obat_sesudah });
 
@@ -37,11 +41,11 @@ exports.create = async (req, res) => {
     const transaksi_obat_keluar = {
       stok_obat_sebelum: stok_obat_sebelum,
       stok_obat_sesudah: stok_obat_sesudah,
-      transaksi_obat_keluar_id: req.body.transaksi_obat_keluar_id,
+      transaksi_medis_id: req.body.transaksi_medis_id,
       obat_id: req.body.obat_id,
-      pasien_id: req.body.pasien_id,
       jml_obat: req.body.jml_obat,
-      harga: req.body.harga
+      harga: harga,
+      dosis: req.body.dosis,
     };
 
     // Save transaksi_obat_keluar to the database
@@ -232,4 +236,58 @@ exports.deleteAll = (req, res) => {
           err.message || "Some error occurred while removing all transaksi obat keluars.",
       });
     });
+};
+
+exports.hardDelete = async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const result = await TransaksiObatMasuk.destroy({
+      where: { id: id },
+      force: true  // Menghapus permanen
+    });
+
+    if (result == 1) {
+      res.send({
+        message: "TransaksiObatMasuk was deleted permanently."
+      });
+    } else {
+      res.send({
+        message: `Cannot delete TransaksiObatMasuk with id=${id}. Maybe TransaksiObatMasuk was not found!`
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: "Error deleting TransaksiObatMasuk with id=" + id
+    });
+  }
+};
+
+exports.hardDeleteDokter = async (req, res) => {
+  const id = req.params.id;
+
+  res.status(500).send({
+    message: id,
+  });
+
+  try {
+    const result = await TransaksiObatMasuk.destroy({
+      where: { id: id },
+      force: true  // Menghapus permanen
+    });
+
+    if (result == 1) {
+      res.send({
+        message: "TransaksiObatMasuk was deleted permanently."
+      });
+    } else {
+      res.send({
+        message: `Cannot delete TransaksiObatMasuk with id=${id}. Maybe TransaksiObatMasuk was not found!`
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: "Error deleting TransaksiObatMasuk with id=" + id
+    });
+  }
 };

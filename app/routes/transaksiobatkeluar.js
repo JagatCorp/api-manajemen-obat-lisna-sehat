@@ -22,6 +22,8 @@ module.exports = (app) => {
   
     // Delete a Tutorial with id
     router.delete("/:id", transaksi_obat_keluar.delete);
+
+    router.delete("/hard/dokter/:id", transaksi_obat_keluar.hardDeleteDokter);
   
     // Delete all transaksi_obat_keluar
     router.delete("/", transaksi_obat_keluar.deleteAll);

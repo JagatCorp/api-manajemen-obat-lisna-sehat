@@ -934,7 +934,7 @@ exports.updateSelesai = async (req, res) => {
       include: [Dokter, Pasien],
     });
 
-    return res.send({ message: existingTransaksiMedis });
+    return res.send({ message: req.body });
 
     if (!existingTransaksiMedis) {
       return res
