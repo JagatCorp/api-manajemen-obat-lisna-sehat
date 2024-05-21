@@ -17,6 +17,9 @@ module.exports = (sequelize, Sequelize) => {
     stok_obat_sesudah: {
       type: Sequelize.INTEGER,
     },
+    dosis: {
+      type: Sequelize.STRING,
+    },
     harga: {
       type: Sequelize.INTEGER,
     },
