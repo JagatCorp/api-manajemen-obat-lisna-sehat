@@ -725,6 +725,65 @@ exports.findOne = async (req, res) => {
   }
 };
 
+exports.findDokterBerobat = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const transaksi_medis = await TransaksiMedis.findOne({
+      where: { dokter_id: id, status: '2' },
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: Pasien,
+          attributes: [
+            "nama",
+            "jk",
+            "no_telp",
+            "alergi",
+            "tgl_lahir",
+            "gol_darah",
+            "alamat",
+          ],
+        },
+        {
+          model: Dokter,
+          attributes: [
+            "nama_dokter",
+            "jk",
+            "mulai_praktik",
+            "selesai_praktik",
+            "hari_praktik",
+            "spesialis_dokter_id",
+            "urlGambar",
+          ],
+          include: [
+            {
+              model: SpesialisDokter,
+              attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+            },
+          ],
+        },
+      ],
+      attributes: {
+        exclude: ["updatedAt"],
+      },
+    });
+
+    if (!transaksi_medis) {
+      return res.status(404).send({
+        message: `Cannot find transaksi_medis with pasien_id=${id}.`,
+      });
+    }
+
+    res.send(transaksi_medis);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: `Error retrieving transaksi_medis with pasien_id=${pasienId}`,
+    });
+  }
+};
+
 // Update a transaksi_medis by the id in the request
 // exports.update = async (req, res) => {
 //   const id = req.params.id;
@@ -933,8 +992,6 @@ exports.updateSelesai = async (req, res) => {
     const existingTransaksiMedis = await TransaksiMedis.findByPk(id, {
       include: [Dokter, Pasien],
     });
-
-    return res.send({ message: req.body });
 
     if (!existingTransaksiMedis) {
       return res

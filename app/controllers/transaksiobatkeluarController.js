@@ -266,12 +266,17 @@ exports.hardDelete = async (req, res) => {
 exports.hardDeleteDokter = async (req, res) => {
   const id = req.params.id;
 
-  res.status(500).send({
-    message: id,
-  });
+  const transaksi_obat_keluar = await TransaksiObatKeluar.findByPk(id);
+
+  const obat = await Obat.findByPk(transaksi_obat_keluar.obat_id);
+
+  const stokObat = obat.stok;
+  const jml_obat = transaksi_obat_keluar.jml_obat;
+
+  obat.update({ stok: stokObat + jml_obat });
 
   try {
-    const result = await TransaksiObatMasuk.destroy({
+    const result = await TransaksiObatKeluar.destroy({
       where: { id: id },
       force: true  // Menghapus permanen
     });
