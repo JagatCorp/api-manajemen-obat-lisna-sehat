@@ -6,6 +6,10 @@ const dokterMiddleware = require("../middleware/dokter"); // Import middleware d
 const { Op } = require("sequelize");
 const bcrypt = require("bcryptjs");
 const fs = require('fs');
+const TransaksiMedis = db.transaksi_medis;
+const Pasien = db.pasien;
+
+
 
 // Fungsi untuk menghapus file gambar
 const deleteImage = (filePath) => {
@@ -144,6 +148,125 @@ exports.findAll = async (req, res) => {
   }
 };
 
+exports.findTransaksiDokter = async (req, res) => {
+  try {
+    // Mendapatkan nilai halaman dan ukuran halaman dari query string (default ke halaman 1 dan ukuran 10 jika tidak disediakan)
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    // Menghitung offset berdasarkan halaman dan ukuran halaman
+    const offset = (page - 1) * pageSize;
+    const keyword = req.query.keyword || "";
+
+    // Query pencarian
+    const searchQuery = {
+      where: {
+        [Op.or]: [{ nama_dokter: { [Op.like]: `%${keyword}%` } }],
+      },
+      limit: pageSize,
+      offset: offset,
+      include: [
+        {
+          model: SpesialisDokter,
+          attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+        },
+      ],
+    };
+
+    // Mendapatkan tanggal hari ini
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set waktu ke 00:00:00
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // Mendapatkan tanggal besok
+
+    const dokterList = await Dokter.findAll(searchQuery);
+
+    const dokterWithTransaksi = await Promise.all(dokterList.map(async (dokter) => {
+      const transaksiMedis = await TransaksiMedis.findAll({
+        where: {
+          dokter_id: dokter.id,
+          createdAt: {
+            [Op.gte]: today,
+            [Op.lt]: tomorrow,
+          }
+        }, 
+        include: [
+          {
+            model: Pasien,
+            attributes: [
+              "nama",
+            ],
+          },
+        ],
+      });
+
+      const transaksiMedisBerobat = await TransaksiMedis.findOne({
+        where: {
+          status: '2',
+          dokter_id: dokter.id,
+        },
+        include: [
+          {
+            model: Pasien,
+            attributes: [
+              "nama",
+              "jk",
+              "no_telp",
+              "alergi",
+              "tgl_lahir",
+              "gol_darah",
+              "alamat",
+            ],
+          },
+          {
+            model: Dokter,
+            attributes: [
+              "nama_dokter",
+              "mulai_praktik",
+              "selesai_praktik",
+              "hari_praktik",
+              "spesialis_dokter_id",
+              "urlGambar",
+            ],
+            include: [
+              {
+                model: SpesialisDokter,
+                attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+              },
+            ],
+          },
+        ],
+      });
+
+      return {
+        ...dokter.toJSON(),
+        transaksi_medis: transaksiMedis,
+        transaksi_medis_berobat: transaksiMedisBerobat
+      };
+    }));
+
+    const totalCount = await Dokter.count(searchQuery);
+
+    // Menghitung total jumlah halaman berdasarkan ukuran halaman
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Kirim response dengan data JSON dan informasi pagination
+    res.send({
+      // data: dokter,
+      data: dokterWithTransaksi,
+      currentPage: page,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCount: totalCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .send({ message: error.message || "Error retrieving dokters." });
+  }
+};
+
 // Find a single admin with an id
 
 exports.findOne = async (req, res) => {
@@ -253,10 +376,10 @@ exports.update = async (req, res) => {
     // Menyimpan perubahan ke dalam database
     await dokter.save();
 
-    if(req.body.profile){
-      res.send({ message: "dokter was updated successfully.", urlGambar: imageUrl});
+    if (req.body.profile) {
+      res.send({ message: "dokter was updated successfully.", urlGambar: imageUrl });
     } else {
-      res.send({ message: "dokter was updated successfully."});
+      res.send({ message: "dokter was updated successfully." });
     }
   } catch (error) {
     res.status(500).send({ message: "Error updating dokter with id=" + id + ', ' + error });

@@ -9,9 +9,11 @@ module.exports = (app) => {
 
   // Retrieve all dokter
   router.get("/", dokter.findAll);
+  router.get("/transaksimedis", dokter.findTransaksiDokter);
 
   // Retrieve a single dokter with id
   router.get("/:id", dokter.findOne);
+
 
   // Update a dokter with id
   router.put("/:id", dokterMiddleware.single('gambar_dokter'), dokter.update);
