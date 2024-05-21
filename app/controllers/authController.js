@@ -156,33 +156,40 @@ const decodeJWTAndGetID = (token) => {
 exports.cekToken = async (req, res) => {
   try {
     // Dapatkan token dari header Authorization
-    const token = req.header("Authorization");
+    const authHeader = req.header("Authorization");
+    
+    console.log("Authorization Header:", authHeader); // Tambahkan ini untuk mencetak header Authorization
 
-    console.log("Token received:", token); // Tambahkan ini untuk mencetak token
-
-    if (!token) {
+    if (!authHeader) {
       return res.status(401).json({ message: "Missing token" });
     }
 
-    // decode JWT untuk mendapatkan payload
+    // Pastikan token menggunakan format Bearer
+    const token = authHeader.split(' ')[1];
+    
+    console.log("Token received:", token); // Tambahkan ini untuk mencetak token
+
+    if (!token) {
+      return res.status(401).json({ message: "Invalid token format" });
+    }
+
+    // Decode JWT untuk mendapatkan payload
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
-        return res.status(500).json({ message: "Failed to decode JWT", err });
+        return res.status(401).json({ message: "Failed to decode JWT", err });
       }
 
       // Ambil peran (role) dari payload JWT
       const { role } = decoded;
 
       if (!role) {
-        return res
-          .status(500)
-          .json({ message: "Role not found in JWT payload" });
+        return res.status(400).json({ message: "Role not found in JWT payload" });
       }
 
-      res.json({ role });
+      res.json({ role, id: decoded.id, token: token });
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: `Internal server error ${error}` });
+    res.status(500).json({ message: `Internal server error: ${error.message}` });
   }
 };
