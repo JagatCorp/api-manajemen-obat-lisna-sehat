@@ -9,7 +9,8 @@ const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
-const { Op } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
+const transaksimedis = require("../routes/transaksimedis");
 
 // Create and Save a new transaksi_medis
 // exports.create = async (req, res) => {
@@ -224,6 +225,91 @@ exports.create = async (req, res) => {
       .send({ message: error.message || "Error creating transaksi_medis." });
   }
 };
+
+// export
+
+
+exports.export = async (req, res) => {
+  try {
+    // Query untuk mendapatkan semua data tanpa pagination dan search
+    const searchQuery = {
+      include: [
+        {
+          model: Pasien,
+          attributes: [
+            "nama",
+            "jk",
+            "no_telp",
+            "alergi",
+            "tgl_lahir",
+            "gol_darah",
+            "alamat",
+          ],
+        },
+        {
+          model: Dokter,
+          attributes: [
+            "nama_dokter",
+            "mulai_praktik",
+            "selesai_praktik",
+            "hari_praktik",
+            "spesialis_dokter_id",
+            "urlGambar",
+          ],
+          include: [
+            {
+              model: SpesialisDokter,
+              attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+            },
+          ],
+        },
+      ],
+      attributes: {
+        exclude: ["updatedAt"],
+      },
+    };
+
+     var jumlahhargaTotal = 0;    
+    // Mengambil semua transaksi medis
+    const transaksi_medis = await TransaksiMedis.findAll(searchQuery);
+    const transaksiMedisWithObatKeluarCount = await Promise.all(transaksi_medis.map(async (transaksiMedis, index) => {
+      
+      const transaksiObatKeluar = await TransaksiObatKeluar.findAll({
+        where: {
+          transaksi_medis_id: transaksiMedis.id
+        }
+      });
+
+      jumlahhargaTotal += transaksiMedis.harga_total;
+
+      return {
+        no: ++index,
+        'Nama Pasien': transaksiMedis.pasien.nama,
+        'Jenis Kelamin': transaksiMedis.pasien.jk === 'L' ? 'Laki-laki' : 'Perempuan',
+        'Harga Total': transaksiMedis.harga_total,
+        'Nama Dokter': transaksiMedis.dokter.nama_dokter,
+        'Spesialis Dokter': transaksiMedis.dokter.spesialisdokter.nama_spesialis,
+        'Nama Obat': transaksiMedis.obat,
+        'Jumlah Jenis Obat DiBeli': transaksiObatKeluar.length,
+        // ...transaksiMedis.toJSON(),
+
+      };
+    }))
+
+
+    // Kirim response dengan data JSON
+    res.send({
+      data: transaksiMedisWithObatKeluarCount,
+      jumlahhargaTotal: jumlahhargaTotal,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving transaksi_mediss." });
+  }
+};
+
+
+
 
 exports.findAll = async (req, res) => {
   try {

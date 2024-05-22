@@ -86,6 +86,7 @@ db.transaksi_medis.belongsTo(db.dokter, { foreignKey: "dokter_id" });
 // relasi table transaksi medis dan masuk ke pasien
 db.transaksi_medis.belongsTo(db.pasien, { foreignKey: "pasien_id" });
 
+db.transaksi_medis.hasMany(db.transaksi_obat_keluar, { foreignKey: "transaksi_medis_id" });
 // Sinkronkan model dengan database
 sequelize
   .sync()
