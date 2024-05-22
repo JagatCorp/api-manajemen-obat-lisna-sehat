@@ -185,11 +185,10 @@ exports.findTransaksiDokter = async (req, res) => {
       const transaksiMedis = await TransaksiMedis.findAll({
         where: {
           dokter_id: dokter.id,
-          createdAt: {
-            [Op.gte]: today,
-            [Op.lt]: tomorrow,
-          }
-        }, 
+          status: 1,
+        },
+        order: [["no_urut", "ASC"]],
+        limit: 1,
         include: [
           {
             model: Pasien,

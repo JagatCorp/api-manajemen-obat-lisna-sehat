@@ -28,6 +28,8 @@ module.exports = (app) => {
 
   router.post("/selesai/:id", transaksi_medis.updateSelesai);
 
+  router.delete("/skip/pasien/:id", transaksi_medis.hardSkipPasien);
+
   // Delete a Tutorial with id
   router.delete("/:id", transaksi_medis.delete);
 

@@ -769,17 +769,17 @@ exports.findDokterBerobat = async (req, res) => {
       },
     });
 
-    if (!transaksi_medis) {
-      return res.status(404).send({
-        message: `Cannot find transaksi_medis with pasien_id=${id}.`,
-      });
-    }
+    // if (!transaksi_medis) {
+    //   return res.status(500).send({
+    //     message: `Cannot find transaksi_medis with dokter_id=${id}.`,
+    //   });
+    // }
 
     res.send(transaksi_medis);
   } catch (error) {
     console.error(error);
     res.status(500).send({
-      message: `Error retrieving transaksi_medis with pasien_id=${pasienId}`,
+      message: `Error retrieving transaksi_medis with dokter_id=${pasienId}`,
     });
   }
 };
@@ -1057,4 +1057,29 @@ exports.deleteAll = (req, res) => {
           "Some error occurred while removing all transaksi_mediss.",
       });
     });
+};
+
+exports.hardSkipPasien = async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const result = await TransaksiMedis.destroy({
+      where: { id: id },
+      force: true  // Menghapus permaneny
+    });
+
+    if (result == 1) {
+      res.send({
+        message: "Transaksi Medis was deleted permanently."
+      });
+    } else {
+      res.send({
+        message: `Cannot delete Transaksi Medis with id=${id}. Maybe Transaksi Medis was not found!`
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: "Error deleting Transaksi Medis with id=" + id
+    });
+  }
 };
