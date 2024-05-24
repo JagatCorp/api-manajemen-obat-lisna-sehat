@@ -227,11 +227,14 @@ exports.create = async (req, res) => {
 };
 
 // export
-
-
 exports.export = async (req, res) => {
   try {
-    // Query untuk mendapatkan semua data tanpa pagination dan search
+    const { startDate, endDate } = req.query;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Set end date to the end of the day
+
     const searchQuery = {
       include: [
         {
@@ -267,13 +270,21 @@ exports.export = async (req, res) => {
       attributes: {
         exclude: ["updatedAt"],
       },
+      where: {},
     };
 
-     var jumlahhargaTotal = 0;    
-    // Mengambil semua transaksi medis
+    // Filter berdasarkan tanggal jika disediakan
+    if (startDate && endDate) {
+      searchQuery.where.createdAt = {
+        [Op.between]: [start, end]
+      };
+    }
+
     const transaksi_medis = await TransaksiMedis.findAll(searchQuery);
+
+    let jumlahhargaTotal = 0;
+
     const transaksiMedisWithObatKeluarCount = await Promise.all(transaksi_medis.map(async (transaksiMedis, index) => {
-      
       const transaksiObatKeluar = await TransaksiObatKeluar.findAll({
         where: {
           transaksi_medis_id: transaksiMedis.id
@@ -291,13 +302,9 @@ exports.export = async (req, res) => {
         'Spesialis Dokter': transaksiMedis.dokter.spesialisdokter.nama_spesialis,
         'Nama Obat': transaksiMedis.obat,
         'Jumlah Jenis Obat DiBeli': transaksiObatKeluar.length,
-        // ...transaksiMedis.toJSON(),
-
       };
-    }))
+    }));
 
-
-    // Kirim response dengan data JSON
     res.send({
       data: transaksiMedisWithObatKeluarCount,
       jumlahhargaTotal: jumlahhargaTotal,
@@ -307,9 +314,6 @@ exports.export = async (req, res) => {
     res.status(500).send({ message: "Error retrieving transaksi_mediss." });
   }
 };
-
-
-
 
 exports.findAll = async (req, res) => {
   try {
