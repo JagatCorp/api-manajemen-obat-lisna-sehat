@@ -116,6 +116,8 @@ exports.findAll = async (req, res) => {
   }
 };
 
+
+
 // Find a single admin with an id
 exports.findOne = async (req, res) => {
   try {
