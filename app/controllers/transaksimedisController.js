@@ -190,11 +190,11 @@ exports.create = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      const qrCodeUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/qrcode/${filename}`;
+      // const qrCodeUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/qrcode/${filename}`;
       // production
-      // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Add QR code URL to the transaksi_medis object
       transaksi_medis.url_qrcode = qrCodeUrl;
@@ -276,7 +276,7 @@ exports.export = async (req, res) => {
     // Filter berdasarkan tanggal jika disediakan
     if (startDate && endDate) {
       searchQuery.where.createdAt = {
-        [Op.between]: [start, end]
+        [Op.between]: [start, end],
       };
     }
 
@@ -284,26 +284,30 @@ exports.export = async (req, res) => {
 
     let jumlahhargaTotal = 0;
 
-    const transaksiMedisWithObatKeluarCount = await Promise.all(transaksi_medis.map(async (transaksiMedis, index) => {
-      const transaksiObatKeluar = await TransaksiObatKeluar.findAll({
-        where: {
-          transaksi_medis_id: transaksiMedis.id
-        }
-      });
+    const transaksiMedisWithObatKeluarCount = await Promise.all(
+      transaksi_medis.map(async (transaksiMedis, index) => {
+        const transaksiObatKeluar = await TransaksiObatKeluar.findAll({
+          where: {
+            transaksi_medis_id: transaksiMedis.id,
+          },
+        });
 
-      jumlahhargaTotal += transaksiMedis.harga_total;
+        jumlahhargaTotal += transaksiMedis.harga_total;
 
-      return {
-        no: ++index,
-        'Nama Pasien': transaksiMedis.pasien.nama,
-        'Jenis Kelamin': transaksiMedis.pasien.jk === 'L' ? 'Laki-laki' : 'Perempuan',
-        'Harga Total': transaksiMedis.harga_total,
-        'Nama Dokter': transaksiMedis.dokter.nama_dokter,
-        'Spesialis Dokter': transaksiMedis.dokter.spesialisdokter.nama_spesialis,
-        'Nama Obat': transaksiMedis.obat,
-        'Jumlah Jenis Obat DiBeli': transaksiObatKeluar.length,
-      };
-    }));
+        return {
+          no: ++index,
+          "Nama Pasien": transaksiMedis.pasien.nama,
+          "Jenis Kelamin":
+            transaksiMedis.pasien.jk === "L" ? "Laki-laki" : "Perempuan",
+          "Harga Total": transaksiMedis.harga_total,
+          "Nama Dokter": transaksiMedis.dokter.nama_dokter,
+          "Spesialis Dokter":
+            transaksiMedis.dokter.spesialisdokter.nama_spesialis,
+          "Nama Obat": transaksiMedis.obat,
+          "Jumlah Jenis Obat DiBeli": transaksiObatKeluar.length,
+        };
+      })
+    );
 
     res.send({
       data: transaksiMedisWithObatKeluarCount,
@@ -820,7 +824,7 @@ exports.findDokterBerobat = async (req, res) => {
     const id = req.params.id;
 
     const transaksi_medis = await TransaksiMedis.findOne({
-      where: { dokter_id: id, status: '2' },
+      where: { dokter_id: id, status: "2" },
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -1043,9 +1047,11 @@ exports.update = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      const qrCodeUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/qrcode/${filename}`;
+      // const qrCodeUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/qrcode/${filename}`;
+      // production
+      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Update the QR code URL and filename in the database
       await TransaksiMedis.update(
@@ -1096,11 +1102,9 @@ exports.updateSelesai = async (req, res) => {
     res.send({ message: "Transaksi medis was updated successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .send({
-        message: `Error updating transaksi_medis with id=${id}: ${error.message}`,
-      });
+    res.status(500).send({
+      message: `Error updating transaksi_medis with id=${id}: ${error.message}`,
+    });
   }
 };
 
