@@ -22,6 +22,9 @@ module.exports = (sequelize, Sequelize) => {
     harga: {
       type: Sequelize.INTEGER,
     },
+    disc_principle: {
+      type: Sequelize.INTEGER,
+    },
     gambar_obat: {
       type: Sequelize.STRING,
     },

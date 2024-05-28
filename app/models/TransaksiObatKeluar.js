@@ -23,6 +23,9 @@ module.exports = (sequelize, Sequelize) => {
     harga: {
       type: Sequelize.INTEGER,
     },
+    disc_principle: {
+      type: Sequelize.INTEGER,
+    },
     jml_obat: {
       type: Sequelize.INTEGER,
     },

@@ -30,8 +30,6 @@ exports.create = async (req, res) => {
     const stok_obat_sebelum = obat.stok;
     const stok_obat_sesudah = parseInt(obat.stok) - parseInt(req.body.jml_obat);
 
-    const harga = obat.harga * parseInt(req.body.jml_obat);
-
     // return res.status(500).json({messages: stok_obat_sesudah});
     // return res.status(500).json({messages: harga});
 
@@ -44,7 +42,8 @@ exports.create = async (req, res) => {
       transaksi_medis_id: req.body.transaksi_medis_id,
       obat_id: req.body.obat_id,
       jml_obat: req.body.jml_obat,
-      harga: harga,
+      harga: obat.harga,
+      disc_principle: obat.disc_principle,
       dosis: req.body.dosis,
     };
 
@@ -147,7 +146,7 @@ exports.findOneAll = async (req, res) => {
       include: [
         {
           model: Obat,
-          attributes: ["nama_obat"],
+          attributes: ["nama_obat", 'qty_sat'],
         },
       ],
     });

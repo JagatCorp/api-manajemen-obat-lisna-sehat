@@ -19,7 +19,8 @@ exports.create = async (req, res) => {
       !req.body.principle_id ||
       !req.body.obat_id ||
       !req.body.jml_obat ||
-      !req.body.harga
+      !req.body.harga ||
+      !req.body.disc_principle
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -40,7 +41,7 @@ exports.create = async (req, res) => {
     const stok_obat_sebelum = obat.stok;
     const stok_obat_sesudah = parseInt(obat.stok) + parseInt(req.body.jml_obat);
 
-    obat.update({ stok: stok_obat_sesudah });
+    obat.update({ stok: stok_obat_sesudah, harga: req.body.harga, disc_principle: req.body.disc_principle });
 
 
     // Create transaksi_obat_masuk object with layanan_id
@@ -50,6 +51,7 @@ exports.create = async (req, res) => {
       principle_id: req.body.principle_id,
       obat_id: req.body.obat_id,
       jml_obat: req.body.jml_obat,
+      disc_principle: req.body.disc_principle,
       harga: req.body.harga
     };
 

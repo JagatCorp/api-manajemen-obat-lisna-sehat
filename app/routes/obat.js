@@ -10,12 +10,14 @@ module.exports = (app) => {
 
   // Retrieve all Tutorials
   router.get("/", obat.findAll);
+  router.post("/data", obat.findExcel);
 
   // Retrieve all published obat
   // router.get("/published", order.findAllPublished);
 
   // Retrieve a single Tutorial with id
   router.get("/:id", obat.findOne);
+
 
   // Update a Tutorial with id
   // router.put("/:id", obat.update);
