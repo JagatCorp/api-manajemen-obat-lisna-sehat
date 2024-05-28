@@ -9,6 +9,9 @@ module.exports = (app) => {
   // Retrieve all Tutorials
   router.get("/", transaksi_medis.findAll);
 
+   // Export
+   router.get("/export", transaksi_medis.export);
+
   router.get("/pasien/:id", transaksi_medis.findAllPasien);
   router.get("/dokter/:id", transaksi_medis.findAllDokter);
 

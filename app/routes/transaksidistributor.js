@@ -9,6 +9,9 @@ module.exports = (app) => {
   // Retrieve all Tutorials
   router.get("/", transaksidistributor.findAll);
 
+  // export
+  router.get("/export", transaksidistributor.export);
+
   router.get("/deletelist", transaksidistributor.deleteList);
 
   // Retrieve all published transaksidistributor

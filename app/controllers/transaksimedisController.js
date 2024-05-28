@@ -9,7 +9,8 @@ const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
-const { Op } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
+const transaksimedis = require("../routes/transaksimedis");
 
 // Create and Save a new transaksi_medis
 // exports.create = async (req, res) => {
@@ -189,11 +190,11 @@ exports.create = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      const qrCodeUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/qrcode/${filename}`;
+      // const qrCodeUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/qrcode/${filename}`;
       // production
-      // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Add QR code URL to the transaksi_medis object
       transaksi_medis.url_qrcode = qrCodeUrl;
@@ -222,6 +223,99 @@ exports.create = async (req, res) => {
     res
       .status(500)
       .send({ message: error.message || "Error creating transaksi_medis." });
+  }
+};
+
+// export
+exports.export = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Set end date to the end of the day
+
+    const searchQuery = {
+      include: [
+        {
+          model: Pasien,
+          attributes: [
+            "nama",
+            "jk",
+            "no_telp",
+            "alergi",
+            "tgl_lahir",
+            "gol_darah",
+            "alamat",
+          ],
+        },
+        {
+          model: Dokter,
+          attributes: [
+            "nama_dokter",
+            "mulai_praktik",
+            "selesai_praktik",
+            "hari_praktik",
+            "spesialis_dokter_id",
+            "urlGambar",
+          ],
+          include: [
+            {
+              model: SpesialisDokter,
+              attributes: ["nama_spesialis", "harga", "is_dokter_gigi"],
+            },
+          ],
+        },
+      ],
+      attributes: {
+        exclude: ["updatedAt"],
+      },
+      where: {},
+    };
+
+    // Filter berdasarkan tanggal jika disediakan
+    if (startDate && endDate) {
+      searchQuery.where.createdAt = {
+        [Op.between]: [start, end],
+      };
+    }
+
+    const transaksi_medis = await TransaksiMedis.findAll(searchQuery);
+
+    let jumlahhargaTotal = 0;
+
+    const transaksiMedisWithObatKeluarCount = await Promise.all(
+      transaksi_medis.map(async (transaksiMedis, index) => {
+        const transaksiObatKeluar = await TransaksiObatKeluar.findAll({
+          where: {
+            transaksi_medis_id: transaksiMedis.id,
+          },
+        });
+
+        jumlahhargaTotal += transaksiMedis.harga_total;
+
+        return {
+          no: ++index,
+          "Nama Pasien": transaksiMedis.pasien.nama,
+          "Jenis Kelamin":
+            transaksiMedis.pasien.jk === "L" ? "Laki-laki" : "Perempuan",
+          "Harga Total": transaksiMedis.harga_total,
+          "Nama Dokter": transaksiMedis.dokter.nama_dokter,
+          "Spesialis Dokter":
+            transaksiMedis.dokter.spesialisdokter.nama_spesialis,
+          "Nama Obat": transaksiMedis.obat,
+          "Jumlah Jenis Obat DiBeli": transaksiObatKeluar.length,
+        };
+      })
+    );
+
+    res.send({
+      data: transaksiMedisWithObatKeluarCount,
+      jumlahhargaTotal: jumlahhargaTotal,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving transaksi_mediss." });
   }
 };
 
@@ -730,7 +824,7 @@ exports.findDokterBerobat = async (req, res) => {
     const id = req.params.id;
 
     const transaksi_medis = await TransaksiMedis.findOne({
-      where: { dokter_id: id, status: '2' },
+      where: { dokter_id: id, status: "2" },
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -953,9 +1047,11 @@ exports.update = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      const qrCodeUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/qrcode/${filename}`;
+      // const qrCodeUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/qrcode/${filename}`;
+      // production
+      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Update the QR code URL and filename in the database
       await TransaksiMedis.update(
@@ -1006,11 +1102,9 @@ exports.updateSelesai = async (req, res) => {
     res.send({ message: "Transaksi medis was updated successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .send({
-        message: `Error updating transaksi_medis with id=${id}: ${error.message}`,
-      });
+    res.status(500).send({
+      message: `Error updating transaksi_medis with id=${id}: ${error.message}`,
+    });
   }
 };
 

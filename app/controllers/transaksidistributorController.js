@@ -167,6 +167,57 @@ exports.findAll = async (req, res) => {
       .send({ message: "Error retrieving transaksidistributors." });
   }
 };
+// export
+exports.export = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Set end date to the end of the day
+
+    const searchQuery = {
+      include: [
+        {
+          model: Barangdistributor,
+          attributes: ["nama_barang", "urlGambar"],
+        },
+      ],
+      attributes: {
+        exclude: ["updatedAt"],
+      },
+      where: {},
+    };
+
+    // Filter berdasarkan tanggal jika disediakan
+    if (startDate && endDate) {
+      searchQuery.where.createdAt = {
+        [Op.between]: [start, end]
+      };
+    }
+
+    const barang_distributor = await Transaksidistributor.findAll(searchQuery);
+
+    const datatransaksidistributor = await Promise.all(barang_distributor.map(async (transaksiDistributor, index) => {
+      return {
+        no: ++index,
+        'Nama Barang': transaksiDistributor.barangdistributor.nama_barang,
+        'Jumlah Barang': transaksiDistributor.jml_barang,
+        'Harga': transaksiDistributor.harga,
+        'Nama Pembeli': transaksiDistributor.nama_pembeli,  
+        'Status': transaksiDistributor.status,
+       
+      };
+    }));
+
+    res.send({
+      data: datatransaksidistributor,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving transaksi_mediss." });
+  }
+};
 
 exports.deleteList = async (req, res) => {
   try {
