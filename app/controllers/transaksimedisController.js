@@ -144,9 +144,9 @@ exports.create = async (req, res) => {
       pasien: pasien.toJSON(),
       dokter: dokter.toJSON(),
       spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
-      keluhan: req.body.keluhan,
-      harga: req.body.harga,
-      diagnosa_dokter: req.body.diagnosa_dokter,
+      // keluhan: req.body.keluhan,
+      // harga: req.body.harga,
+      // diagnosa_dokter: req.body.diagnosa_dokter,
     };
 
     // generate nomor urut antrian
@@ -190,11 +190,11 @@ exports.create = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      // const qrCodeUrl = `${req.protocol}://${req.get(
-      //   "host"
-      // )}/qrcode/${filename}`;
+      const qrCodeUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/qrcode/${filename}`;
       // production
-      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+      // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Add QR code URL to the transaksi_medis object
       transaksi_medis.url_qrcode = qrCodeUrl;
