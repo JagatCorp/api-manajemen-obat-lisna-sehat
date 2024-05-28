@@ -186,7 +186,17 @@ exports.create = async (req, res) => {
       transaksi_medis
     );
 
-    transaksi_medis.id = createdTransaksiMedis.id;
+    const transaksi_medis_qr = {
+      pasien_id: req.body.pasien_id,
+      dokter_id: req.body.dokter_id,
+      pasien: pasien.toJSON(),
+      dokter: dokter.toJSON(),
+      spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
+      keluhan: req.body.keluhan,
+      harga: req.body.harga,
+      diagnosa_dokter: req.body.diagnosa_dokter,
+      id: createdTransaksiMedis.id
+    };
     
     // Generate QR code and save it as a file
     qr.toFile(qrCodePath, JSON.stringify(transaksi_medis), async (err) => {
