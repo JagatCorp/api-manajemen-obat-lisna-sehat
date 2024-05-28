@@ -199,7 +199,7 @@ exports.create = async (req, res) => {
     };
     
     // Generate QR code and save it as a file
-    qr.toFile(qrCodePath, JSON.stringify(transaksi_medis), async (err) => {
+    qr.toFile(qrCodePath, JSON.stringify(transaksi_medis_qr), async (err) => {
       if (err) {
         console.error("Error generating QR code:", err);
         return res.status(500).send({ message: "Error generating QR code." });
