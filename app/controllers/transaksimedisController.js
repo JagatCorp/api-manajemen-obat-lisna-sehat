@@ -173,15 +173,21 @@ exports.create = async (req, res) => {
     } else {
       transaksi_medis.no_urut = ++cekTransaksiMedis.length;
     }
-
+    
     if (req.body.status) {
       transaksi_medis.status = req.body.status;
     } else {
       transaksi_medis.status = 0;
     }
-
+    
     // return res.status(500).send({ message: transaksi_medis.no_urut });
+    
+    const createdTransaksiMedis = await TransaksiMedis.create(
+      transaksi_medis
+    );
 
+    transaksi_medis.id = createdTransaksiMedis.id;
+    
     // Generate QR code and save it as a file
     qr.toFile(qrCodePath, JSON.stringify(transaksi_medis), async (err) => {
       if (err) {
@@ -193,6 +199,7 @@ exports.create = async (req, res) => {
       // const qrCodeUrl = `${req.protocol}://${req.get(
       //   "host"
       // )}/qrcode/${filename}`;
+      
       // production
       const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
@@ -200,9 +207,6 @@ exports.create = async (req, res) => {
       transaksi_medis.url_qrcode = qrCodeUrl;
 
       // Create the transaction record with QR code URL
-      const createdTransaksiMedis = await TransaksiMedis.create(
-        transaksi_medis
-      );
 
       // Send the response with the QR code URL and associated data
       res.send({
