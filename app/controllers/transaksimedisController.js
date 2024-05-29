@@ -137,19 +137,7 @@ exports.create = async (req, res) => {
       `../../public/assets/images/qrcode/${filename}`
     );
 
-    // Create transaksi_medis object
-    const transaksi_medis = {
-      pasien_id: req.body.pasien_id,
-      dokter_id: req.body.dokter_id,
-      pasien: pasien.toJSON(),
-      dokter: dokter.toJSON(),
-      spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
-      // keluhan: req.body.keluhan,
-      // harga: req.body.harga,
-      // diagnosa_dokter: req.body.diagnosa_dokter,
-    };
-
-    // generate nomor urut antrian
+    // Generate nomor urut antrian
     const today = new Date();
     const startOfDay = new Date(
       today.getFullYear(),
@@ -168,19 +156,36 @@ exports.create = async (req, res) => {
       },
     });
 
-    if (cekTransaksiMedis.length == 0) {
-      transaksi_medis.no_urut = 1;
-    } else {
-      transaksi_medis.no_urut = ++cekTransaksiMedis.length;
+    let no_urut = 1;
+    if (cekTransaksiMedis.length > 0) {
+      no_urut = cekTransaksiMedis.length + 1;
     }
 
-    if (req.body.status) {
-      transaksi_medis.status = req.body.status;
-    } else {
-      transaksi_medis.status = 0;
-    }
+    // Create the transaction record first to get the ID
+    const newTransaksiMedis = await TransaksiMedis.create({
+      pasien_id: req.body.pasien_id,
+      dokter_id: req.body.dokter_id,
+      no_urut: no_urut,
+      status: req.body.status || 0,
+      keluhan: req.body.keluhan,
+      harga: req.body.harga,
+      diagnosa_dokter: req.body.diagnosa_dokter,
+    });
 
-    // return res.status(500).send({ message: transaksi_medis.no_urut });
+    // Create transaksi_medis object for QR code content
+    const transaksi_medis = {
+      id: newTransaksiMedis.id, // Include the transaction ID
+      pasien_id: newTransaksiMedis.pasien_id,
+      dokter_id: newTransaksiMedis.dokter_id,
+      pasien: pasien.toJSON(),
+      dokter: dokter.toJSON(),
+      spesialis_dokter: spesialisDokterInfo, // Include spesialis dokter info
+      keluhan: newTransaksiMedis.keluhan,
+      harga: newTransaksiMedis.harga,
+      diagnosa_dokter: newTransaksiMedis.diagnosa_dokter,
+      no_urut: newTransaksiMedis.no_urut,
+      status: newTransaksiMedis.status,
+    };
 
     // Generate QR code and save it as a file
     qr.toFile(qrCodePath, JSON.stringify(transaksi_medis), async (err) => {
@@ -196,24 +201,24 @@ exports.create = async (req, res) => {
       // production
       // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
-      // Add QR code URL to the transaksi_medis object
-      transaksi_medis.url_qrcode = qrCodeUrl;
-
-      // Create the transaction record with QR code URL
-      const createdTransaksiMedis = await TransaksiMedis.create(
-        transaksi_medis
-      );
+      // Update the QR code URL in the database
+      await newTransaksiMedis.update({
+        url_qrcode: qrCodeUrl,
+        filename: filename,
+      });
 
       // Send the response with the QR code URL and associated data
       res.send({
-        pasien_id: transaksi_medis.pasien_id,
-        dokter_id: transaksi_medis.dokter_id,
+        id: newTransaksiMedis.id,
+        pasien_id: newTransaksiMedis.pasien_id,
+        dokter_id: newTransaksiMedis.dokter_id,
         pasien: transaksi_medis.pasien,
         dokter: transaksi_medis.dokter,
         spesialis_dokter: transaksi_medis.spesialis_dokter, // Include spesialis dokter info
         keluhan: transaksi_medis.keluhan,
         harga: transaksi_medis.harga,
         diagnosa_dokter: transaksi_medis.diagnosa_dokter,
+        no_urut: transaksi_medis.no_urut,
         status: transaksi_medis.status,
         qrCodeUrl: qrCodeUrl,
       });
@@ -1047,11 +1052,11 @@ exports.update = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      const qrCodeUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/qrcode/${filename}`;
+      // const qrCodeUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/qrcode/${filename}`;
       // production
-      // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Update the QR code URL and filename in the database
       await TransaksiMedis.update(
