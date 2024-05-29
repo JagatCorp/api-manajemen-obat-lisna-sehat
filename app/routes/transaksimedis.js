@@ -9,8 +9,8 @@ module.exports = (app) => {
   // Retrieve all Tutorials
   router.get("/", transaksi_medis.findAll);
 
-   // Export
-   router.get("/export", transaksi_medis.export);
+  // Export
+  router.get("/export", transaksi_medis.export);
 
   router.get("/pasien/:id", transaksi_medis.findAllPasien);
   router.get("/dokter/:id", transaksi_medis.findAllDokter);
@@ -29,7 +29,7 @@ module.exports = (app) => {
   // Update a Tutorial with id
   router.put("/:id", transaksi_medis.update);
 
-  router.post("/selesai/:id", transaksi_medis.updateSelesai);
+  router.put("/selesai/:id", transaksi_medis.updateSelesai);
 
   router.delete("/skip/pasien/:id", transaksi_medis.hardSkipPasien);
 

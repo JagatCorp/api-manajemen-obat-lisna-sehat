@@ -1047,11 +1047,11 @@ exports.update = async (req, res) => {
       }
 
       // Generate URL for the QR code image local
-      // const qrCodeUrl = `${req.protocol}://${req.get(
-      //   "host"
-      // )}/qrcode/${filename}`;
+      const qrCodeUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/qrcode/${filename}`;
       // production
-      const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
+      // const qrCodeUrl = `https://api.lisnasehat.online/qrcode/${filename}`;
 
       // Update the QR code URL and filename in the database
       await TransaksiMedis.update(
@@ -1159,21 +1159,21 @@ exports.hardSkipPasien = async (req, res) => {
   try {
     const result = await TransaksiMedis.destroy({
       where: { id: id },
-      force: true  // Menghapus permaneny
+      force: true, // Menghapus permaneny
     });
 
     if (result == 1) {
       res.send({
-        message: "Transaksi Medis was deleted permanently."
+        message: "Transaksi Medis was deleted permanently.",
       });
     } else {
       res.send({
-        message: `Cannot delete Transaksi Medis with id=${id}. Maybe Transaksi Medis was not found!`
+        message: `Cannot delete Transaksi Medis with id=${id}. Maybe Transaksi Medis was not found!`,
       });
     }
   } catch (err) {
     res.status(500).send({
-      message: "Error deleting Transaksi Medis with id=" + id
+      message: "Error deleting Transaksi Medis with id=" + id,
     });
   }
 };
