@@ -38,7 +38,7 @@ exports.create = async (req, res) => {
     const imageName = req.file.filename;
     // // local
     // const imageUrl = `${req.protocol}://${req.get("host")}/obat/${imageName}`;
-    // production
+    // production 
     const imageUrl = `https://api.lisnasehat.online/obat/${imageName}`;
 
     // Pastikan bahwa satuan_box dan satuan_sat yang diberikan ada dalam database
