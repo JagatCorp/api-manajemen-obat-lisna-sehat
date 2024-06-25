@@ -16,7 +16,7 @@ exports.create = async (req, res) => {
     // Process uploaded files:
     // Simpan atau proses gambar dan dapatkan URL atau path-nya
     const imageName = `${file.filename}`;
-    //local
+    //localy
     // const imageUrl = `${req.protocol}://${req.get("host")}/barangdistributor/${
     //   file.filename
     // }`;
