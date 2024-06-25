@@ -10,36 +10,14 @@ const multer = require("multer");
 // Create and Save a new Barangdistributor
 exports.create = async (req, res) => {
   try {
-    const file = req.file;
-    const satuan_barangId = req.body.satuan_barangId;
-
-    // Process uploaded files:
-    // Simpan atau proses gambar dan dapatkan URL atau path-nya
-    const imageName = `${file.filename}`;
-    //localy
-    // const imageUrl = `${req.protocol}://${req.get("host")}/barangdistributor/${
-    //   file.filename
-    // }`;
-
-    //production
-    const imageUrl = `https://lisnasehat.online/barangdistributor/${file.filename}`;
-
-    // Cek apakah satuan dengan id yang diberikan ada dalam database
-    const satuan = await Satuan.findByPk(satuan_barangId);
-    if (!satuan) {
-      return res.status(404).send({ message: "Satuan Barang not found!" });
-    }
+  
 
     // Ambil URL gambar pertama jika tersedia
 
     // Buat objek Barangdistributor dengan URL gambar yang telah diproses
     const barangdistributor = {
       nama_barang: req.body.nama_barang,
-      satuan_barangId: req.body.satuan_barangId,
-      harga_satuan_barang: req.body.harga_satuan_barang,
-      satuan_stok_barang: req.body.satuan_stok_barang,
-      gambar: imageName,
-      urlGambar: imageUrl,
+     
     };
 
     // Simpan Barangdistributor ke database menggunakan metode yang sesuai
@@ -58,11 +36,6 @@ exports.create = async (req, res) => {
 const barangdistributorSerializer = new JSONAPISerializer("barangdistributor", {
   attributes: [
     "nama_barang",
-    "satuan_barangId",
-    "harga_satuan_barang",
-    "satuan_stok_barang",
-    "gambar",
-    "urlGambar",
   ],
   keyForAttribute: "underscore_case",
 });
@@ -81,18 +54,12 @@ exports.findAll = async (req, res) => {
       where: {
         [Op.or]: [
           { nama_barang: { [Op.like]: `%${keyword}%` } },
-          { harga_satuan_barang: { [Op.like]: `%${keyword}%` } },
-          { satuan_stok_barang: { [Op.like]: `%${keyword}%` } },
+          
         ],
       },
       limit: pageSize,
       offset: offset,
-      include: [
-        {
-          model: Satuan,
-          attributes: ["nama_satuan"],
-        },
-      ],
+     
     };
 
     // Mengambil data barangdistributor dengan pagination dan pencarian menggunakan Sequelize
@@ -154,36 +121,16 @@ exports.findOne = async (req, res) => {
 // Update a Barangdistributor by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const file = req.file;
+  
 
   try {
     let barangdistributorData = req.body;
 
-    // Jika pengguna mengunggah gambar baru, gunakan gambar yang baru diupdate
-    if (file) {
-      const imageName = file.filename;
-      // local
-      // const imageUrl = `${req.protocol}://${req.get(
-      //   "host"
-      // )}/barangdistributor/${file.filename}`;
-      // production
-      const imageUrl = `https://api.lisnasehat.online/barangdistributor/${file.filename}`;
-
-      barangdistributorData = {
-        ...barangdistributorData,
-        gambar: imageName,
-        urlGambar: imageUrl,
-      };
-    }
+   
 
     // Temukan barangdistributor yang akan diupdate
     const barangdistributor = await Barangdistributor.findByPk(id);
-    if (!barangdistributor) {
-      return res
-        .status(404)
-        .send({ message: `barangdistributor with id=${id} not found` });
-    }
-
+   
     // Perbarui data barangdistributor dengan data baru, termasuk data yang tidak berubah
     await barangdistributor.update(barangdistributorData);
 
