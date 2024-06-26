@@ -21,18 +21,18 @@ exports.create = async (req, res) => {
     // Pastikan bahwa semua data yang diperlukan ada
     const { nama_obat, satuan_box_id, satuan_sat_id, qty_sat, stok, harga, disc_principle } =
       req.body;
-    if (
-      !nama_obat ||
-      !satuan_box_id ||
-      !satuan_sat_id ||
-      !qty_sat ||
-      !harga ||
-      !stok ||
-      !disc_principle ||
-      !req.file
-    ) {
-      return res.status(400).send({ message: "All fields are required!" });
-    }
+    // if (
+    //   !nama_obat ||
+    //   !satuan_box_id ||
+    //   !satuan_sat_id ||
+    //   !qty_sat ||
+    //   !harga ||
+    //   !stok ||
+    //   !disc_principle ||
+    //   !req.file
+    // ) {
+    //   return res.status(400).send({ message: "All fields are required!" });
+    // }
 
     // Proses file gambar yang diunggah
     const imageName = req.file.filename;
@@ -130,6 +130,8 @@ exports.findAll = async (req, res) => {
     res.status(500).send({ message: "Error retrieving obats." });
   }
 };
+
+
 
 // Find a single admin with an id
 

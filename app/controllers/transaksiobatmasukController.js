@@ -8,7 +8,7 @@ const Obat = db.obat;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
 const { Op } = require("sequelize");
-
+const moment = require("moment");
 // Create and Save a new transaksi_obat_masuk
 exports.create = async (req, res) => {
   try {
@@ -131,6 +131,75 @@ exports.findAll = async (req, res) => {
     res.status(500).send({ message: "Error retrieving transaksi_obat_masuks." });
   }
 };
+
+
+exports.findAllHariini = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * pageSize;
+    const keyword = req.query.keyword || "";
+
+    const startOfToday = moment().startOf('day').toDate();
+    const endOfToday = moment().endOf('day').toDate();
+
+    const searchQuery = {
+      where: {
+        createdAt: {
+          [Op.gte]: startOfToday,
+          [Op.lt]: endOfToday
+        },
+        // Uncomment this block if you want to add keyword searching
+        // [Op.or]: [
+        //   { nama: { [Op.like]: `%${keyword}%` } },
+        // ],
+      },
+      limit: pageSize,
+      offset: offset,
+      include: [
+        {
+          model: Obat,
+          attributes: ["nama_obat"],
+        },
+        {
+          model: Principle,
+          attributes: ["nama_instansi"],
+        },
+      ],
+      attributes: {
+        exclude: [
+          // "createdAt",
+          "updatedAt"
+        ],
+      },
+    };
+
+    const transaksi_obat_masuk = await TransaksiObatMasuk.findAll(searchQuery);
+    const totalCount = await TransaksiObatMasuk.count({
+      where: {
+        createdAt: {
+          [Op.gte]: startOfToday,
+          [Op.lt]: endOfToday
+        },
+      }
+    });
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    res.send({
+      data: transaksi_obat_masuk,
+      currentPage: page,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCount: totalCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving transaksi_obat_masuks." });
+  }
+};
+
+
 
 exports.findAllDelete = async (req, res) => {
   try {
