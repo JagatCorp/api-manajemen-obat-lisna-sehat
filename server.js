@@ -45,23 +45,16 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to Klinik Dayalisna application." });
 });
 
-require("./app/routes/layanan")(app);
 require("./app/routes/administrators")(app);
 require("./app/routes/auth")(app);
-require("./app/routes/order")(app);
 require("./app/routes/satuan")(app);
 require("./app/routes/obat")(app);
-require("./app/routes/dokter")(app);
-require("./app/routes/spesialisdokter")(app);
 require("./app/routes/barangdistributor")(app);
 require("./app/routes/transaksiobatkeluar")(app);
 require("./app/routes/transaksiobatmasuk")(app);
 require("./app/routes/principle")(app);
 require("./app/routes/pembelidistributor")(app);
-require("./app/routes/pasien")(app);
 require("./app/routes/transaksidistributor")(app);
-require("./app/routes/transaksimedis")(app);
-
 // set port, listen for requests
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

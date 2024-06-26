@@ -24,7 +24,6 @@ db.sequelize = sequelize;
 // Import model yang dibutuhkan
 db.satuan = require("./Satuan.js")(sequelize, Sequelize);
 db.obat = require("./Obat.js")(sequelize, Sequelize);
-db.layanan = require("./Layanan.js")(sequelize, Sequelize);
 db.transaksi_obat_keluar = require("./TransaksiObatKeluar.js")(
   sequelize,
   Sequelize
@@ -34,31 +33,23 @@ db.transaksi_obat_masuk = require("./TransaksiObatMasuk.js")(
   Sequelize
 );
 db.principle = require("./Principle.js")(sequelize, Sequelize);
-db.spesialisdokter = require("./Spesialisdokter.js")(sequelize, Sequelize);
-db.dokter = require("./Dokter.js")(sequelize, Sequelize);
 db.administrators = require("./Administrators.js")(sequelize, Sequelize);
-db.order = require("./Order.js")(sequelize, Sequelize);
 db.barangdistributors = require("./Barangdistributor.js")(sequelize, Sequelize);
 db.pembelidistributors = require("./Pembelidistributor.js")(
   sequelize,
   Sequelize
 );
-db.pasien = require("./Pasien.js")(sequelize, Sequelize);
 db.transaksidistributors = require("./Transaksidistributor.js")(
   sequelize,
   Sequelize
 );
-db.transaksi_medis = require("./TransaksiMedis.js")(sequelize, Sequelize);
 
-// relasi table order ke layanan
-db.order.belongsTo(db.layanan, { foreignKey: "layananId" });
+
 
 // relasi table obat ke satuan
 db.obat.belongsTo(db.satuan, { as: "satuan_box", foreignKey: "satuan_box_id" });
 db.obat.belongsTo(db.satuan, { as: "satuan_sat", foreignKey: "satuan_sat_id" });
 
-// relasi table transaksi obat keluar ke transaksi medis
-db.transaksi_obat_keluar.belongsTo(db.transaksi_medis, { foreignKey: "transaksi_medis_id" });
 
 // relasi table transaksi obat keluar dan masuk ke obat
 db.transaksi_obat_keluar.belongsTo(db.obat, { foreignKey: "obat_id" });
@@ -67,8 +58,6 @@ db.transaksi_obat_masuk.belongsTo(db.obat, { foreignKey: "obat_id" });
 // relasi table transaksi obat masuk dan masuk ke principle
 db.transaksi_obat_masuk.belongsTo(db.principle, { foreignKey: "principle_id" });
 
-// relasi table spesialis dokter ke table dokter
-db.dokter.belongsTo(db.spesialisdokter, { foreignKey: "spesialis_dokter_id" });
 
 // relasi table transaksidistributors ke barangdistributors
 db.transaksidistributors.belongsTo(db.barangdistributors, {
@@ -80,13 +69,8 @@ db.barangdistributors.belongsTo(db.satuan, {
   foreignKey: "satuan_barangId",
 });
 
-// relasi table transaksi medis dan masuk ke dokter
-db.transaksi_medis.belongsTo(db.dokter, { foreignKey: "dokter_id" });
 
-// relasi table transaksi medis dan masuk ke pasien
-db.transaksi_medis.belongsTo(db.pasien, { foreignKey: "pasien_id" });
 
-db.transaksi_medis.hasMany(db.transaksi_obat_keluar, { foreignKey: "transaksi_medis_id" });
 // Sinkronkan model dengan database
 sequelize
   .sync()
