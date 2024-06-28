@@ -8,8 +8,10 @@ module.exports = (app) => {
   
     // Retrieve all Tutorials
     router.get("/", transaksi_obat_masuk.findAll);
-    // Retrieve all Tutorials
+    // transaksi_obat_masuk.findAllHariini
     router.get("/hariini", transaksi_obat_masuk.findAllHariini);
+    // transaksi_obat_masuk.findAllJatuhTempo
+    router.get("/jatuh_tempo", transaksi_obat_masuk.findAllJatuhTempo);
 
     router.get("/delete", transaksi_obat_masuk.findAllDelete);
   

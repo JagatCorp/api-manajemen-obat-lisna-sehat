@@ -26,6 +26,9 @@ module.exports = (sequelize, Sequelize) => {
     jml_obat: {
       type: Sequelize.INTEGER,
     },
+    jatuh_tempo: {
+      type: Sequelize.DATE,
+    },
   }, {
     sequelize,
     modelName: "TransaksiObatMasuk",

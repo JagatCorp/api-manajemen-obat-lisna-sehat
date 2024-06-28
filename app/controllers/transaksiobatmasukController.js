@@ -52,7 +52,8 @@ exports.create = async (req, res) => {
       obat_id: req.body.obat_id,
       jml_obat: req.body.jml_obat,
       disc_principle: req.body.disc_principle,
-      harga: req.body.harga
+      harga: req.body.harga,
+      jatuh_tempo: req.body.jatuh_tempo
     };
 
     if (req.body.createdAt != '') {
@@ -132,7 +133,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-
+// hari ini
 exports.findAllHariini = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -159,7 +160,7 @@ exports.findAllHariini = async (req, res) => {
       include: [
         {
           model: Obat,
-          attributes: ["nama_obat"],
+          attributes: ["nama_obat", "urlGambar"],
         },
         {
           model: Principle,
@@ -199,7 +200,75 @@ exports.findAllHariini = async (req, res) => {
   }
 };
 
+// jatuh tempo
 
+
+exports.findAllJatuhTempo = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * pageSize;
+    const keyword = req.query.keyword || "";
+
+    const searchQuery = {
+      where: {
+        // Menambahkan pencarian berdasarkan keyword jika diperlukan
+        ...(keyword && {
+          [Op.or]: [
+            { '$Obat.nama_obat$': { [Op.like]: `%${keyword}%` } },
+            { '$Principle.nama_instansi$': { [Op.like]: `%${keyword}%` } }
+          ]
+        })
+      },
+      limit: pageSize,
+      offset: offset,
+      include: [
+        {
+          model: Obat,
+          attributes: ["nama_obat", "urlGambar"],
+        },
+        {
+          model: Principle,
+          attributes: ["nama_instansi"],
+        },
+      ],
+      attributes: {
+        exclude: [
+          // "createdAt",
+          "updatedAt"
+        ],
+      },
+      order: [
+        ['jatuh_tempo', 'DESC']  
+      ]
+    };
+
+    const transaksi_obat_masuk = await TransaksiObatMasuk.findAll(searchQuery);
+    const totalCount = await TransaksiObatMasuk.count({
+      where: {
+        ...(keyword && {
+          [Op.or]: [
+            { '$Obat.nama_obat$': { [Op.like]: `%${keyword}%` } },
+            { '$Principle.nama_instansi$': { [Op.like]: `%${keyword}%` } }
+          ]
+        })
+      }
+    });
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    res.send({
+      data: transaksi_obat_masuk,
+      currentPage: page,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCount: totalCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving transaksi_obat_masuks." });
+  }
+};
 
 exports.findAllDelete = async (req, res) => {
   try {
