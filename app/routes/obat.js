@@ -11,7 +11,8 @@ module.exports = (app) => {
   // Retrieve all Tutorials
   router.get("/", obat.findAll);
   router.post("/data", obat.findExcel);
-
+  // untuk chart perminggu
+  router.get("/chart", obat.chart);
   // Retrieve all published obat
   // router.get("/published", order.findAllPublished);
 

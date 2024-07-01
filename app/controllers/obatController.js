@@ -13,7 +13,7 @@ const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 const { Op } = require("sequelize");
 
 const multer = require("multer");
-
+const moment = require("moment");
 // Create and Save a new obat
 
 exports.create = async (req, res) => {
@@ -274,7 +274,7 @@ exports.deleteAll = (req, res) => {
   
   
   // code benar tapi salah
-  exports.findExcel = async (req, res) => {
+ exports.findExcel = async (req, res) => {
     try {
       const urutBulan = {
         "Januari": '01',
@@ -517,6 +517,89 @@ exports.deleteAll = (req, res) => {
       data: data,
     });
 
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error retrieving obats." });
+  }
+};
+
+exports.chart = async (req, res) => {
+  try {
+    // Mendapatkan nilai halaman dan ukuran halaman dari query string (default ke halaman 1 dan ukuran 10 jika tidak disediakan)
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    // Menghitung offset berdasarkan halaman dan ukuran halaman
+    const offset = (page - 1) * pageSize;
+    const keyword = req.query.keyword || "";
+
+    // Mendapatkan tanggal hari ini
+    const today = moment();
+
+    // Mengatur tanggal awal minggu (misalnya, hari Senin) dan akhir minggu (hari Minggu)
+    const startOfCurrentWeek = today.startOf('isoWeek').toDate();
+    const endOfCurrentWeek = today.endOf('isoWeek').toDate();
+
+    // Query pencarian
+    const searchQuery = {
+      where: {
+        [Op.and]: [
+          {
+            createdAt: {
+              [Op.between]: [startOfCurrentWeek, endOfCurrentWeek],
+            },
+          },
+          {
+            [Op.or]: [{ nama_obat: { [Op.like]: `%${keyword}%` } }],
+          },
+        ],
+      },
+      limit: pageSize,
+      offset: offset,
+      include: [
+        {
+          model: Satuan,
+          as: "satuan_box",
+          attributes: ["nama_satuan"],
+        },
+        {
+          model: Satuan,
+          as: "satuan_sat",
+          attributes: ["nama_satuan"],
+        },
+      ],
+      attributes: {
+        exclude: ["updatedAt"],
+      },
+    };
+
+    const obat = await Obat.findAll(searchQuery);
+    const totalCount = await Obat.count({
+      where: {
+        [Op.and]: [
+          {
+            createdAt: {
+              [Op.between]: [startOfCurrentWeek, endOfCurrentWeek],
+            },
+          },
+          {
+            [Op.or]: [{ nama_obat: { [Op.like]: `%${keyword}%` } }],
+          },
+        ],
+      },
+    });
+
+    // Menghitung total jumlah halaman berdasarkan ukuran halaman
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Kirim response dengan data JSON dan informasi pagination
+    res.send({
+      data: obat,
+      currentPage: page,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCount: totalCount,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Error retrieving obats." });
