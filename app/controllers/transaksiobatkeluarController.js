@@ -13,10 +13,8 @@ exports.create = async (req, res) => {
   try {
     // Validate request
     if (
-      !req.body.transaksi_medis_id ||
       !req.body.obat_id ||
-      !req.body.jml_obat ||
-      !req.body.dosis
+      !req.body.jml_obat 
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -39,12 +37,10 @@ exports.create = async (req, res) => {
     const transaksi_obat_keluar = {
       stok_obat_sebelum: stok_obat_sebelum,
       stok_obat_sesudah: stok_obat_sesudah,
-      transaksi_medis_id: req.body.transaksi_medis_id,
       obat_id: req.body.obat_id,
       jml_obat: req.body.jml_obat,
       harga: obat.harga,
       disc_principle: obat.disc_principle,
-      dosis: req.body.dosis,
     };
 
     // Save transaksi_obat_keluar to the database
@@ -74,6 +70,7 @@ exports.findAll = async (req, res) => {
 
     // Query pencarian
     const searchQuery = {
+      // pengen nyari apa???
       // where: {
       //   [Op.or]: [
       //     { nama: { [Op.like]: `%${keyword}%` } },
@@ -81,24 +78,33 @@ exports.findAll = async (req, res) => {
       // },
       limit: pageSize,
       offset: offset,
+      include: [
+        {
+          model: Obat,
+          attributes: ["nama_obat"],
+        },
+      ],
       attributes: {
-        exclude: ["createdAt", "updatedAt"],
+        exclude: [
+          // "createdAt", 
+          "updatedAt"
+        ],
       },
     };
 
     const transaksi_obat_keluar = await TransaksiObatKeluar.findAll(searchQuery);
     const totalCount = await TransaksiObatKeluar.count(searchQuery);
     // Menghitung total jumlah transaksi_obat_keluar
-    // const totalCount = await TransaksiObatKeluar.count();
+    // const totalCount = await TransaksiObatkeluar.count();
 
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const obatKeluarData = obatKeluarSerializer.serialize(transaksi_obat_keluar);
-    
+    // const transaksi_obat_keluarData = transaksi_obat_keluarSerializer.serialize(transaksi_obat_keluar);
+
     // Kirim response dengan data JSON dan informasi pagination
     res.send({
-      data: obatKeluarData,
+      data: transaksi_obat_keluar,
       currentPage: page,
       totalPages: totalPages,
       pageSize: pageSize,
@@ -106,7 +112,7 @@ exports.findAll = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Error retrieving transaksi obat keluar." });
+    res.status(500).send({ message: "Error retrieving transaksi_obat_keluars." });
   }
 };
 
