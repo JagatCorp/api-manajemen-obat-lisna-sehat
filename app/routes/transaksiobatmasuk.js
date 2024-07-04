@@ -1,9 +1,11 @@
 module.exports = (app) => {
     const transaksi_obat_masuk = require("../controllers/transaksiobatmasukController");
-  
+    const upl_nota = require("../middleware/transaksi_obat_masuk");
     var router = require("express").Router();
   
     // Create a new Tutorial
+    // Route for image upload
+    router.post("/", upl_nota.single("gambar_nota"),transaksi_obat_masuk.create);
     router.post("/", transaksi_obat_masuk.create);
   
     // Retrieve all Tutorials
@@ -22,7 +24,8 @@ module.exports = (app) => {
     router.get("/:id", transaksi_obat_masuk.findOne);
   
     // Update a Tutorial with id
-    router.put("/:id", transaksi_obat_masuk.update);
+    // router.put("/:id", transaksi_obat_masuk.update);
+    router.put("/:id", upl_nota.single("gambar_nota"),transaksi_obat_masuk.update);
 
     router.put("/restore/:id", transaksi_obat_masuk.restore);
   

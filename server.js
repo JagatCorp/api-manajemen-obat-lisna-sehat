@@ -9,6 +9,7 @@ app.use(
 );
 app.use("/dokter", express.static("public/assets/images/dokter"));
 app.use("/obat", express.static("public/assets/images/obat"));
+app.use("/nota", express.static("public/assets/images/nota"));
 app.use("/qrcode", express.static("public/assets/images/qrcode"));
 app.use(cors());
 

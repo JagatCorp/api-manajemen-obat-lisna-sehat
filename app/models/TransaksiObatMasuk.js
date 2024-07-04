@@ -29,6 +29,15 @@ module.exports = (sequelize, Sequelize) => {
     jatuh_tempo: {
       type: Sequelize.DATE,
     },
+    expired: {
+      type: Sequelize.DATE,
+    },
+    gambar_nota: {
+      type: Sequelize.STRING,
+    },
+    urlGambar: {
+      type: Sequelize.STRING,
+    },
   }, {
     sequelize,
     modelName: "TransaksiObatMasuk",

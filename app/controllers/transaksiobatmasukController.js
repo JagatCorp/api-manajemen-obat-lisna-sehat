@@ -9,6 +9,8 @@ const JSONAPISerializer = require("jsonapi-serializer").Serializer;
 
 const { Op } = require("sequelize");
 const moment = require("moment");
+const fs = require('fs');
+const path = require('path');
 // Create and Save a new transaksi_obat_masuk
 exports.create = async (req, res) => {
   try {
@@ -16,15 +18,21 @@ exports.create = async (req, res) => {
     if (
       // !req.body.stok_obat_sebelum ||
       // !req.body.stok_obat_sesudah ||
-      !req.body.principle_id ||
-      !req.body.obat_id ||
-      !req.body.jml_obat ||
-      !req.body.harga ||
+      // !req.body.principle_id ||
+      // !req.body.obat_id ||
+      // !req.body.jml_obat ||
+      // !req.body.harga ||
       !req.body.disc_principle
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
 
+    // Proses file gambar yang diunggah
+    const imageName = req.file.filename;
+    // // local
+     const imageUrl = `${req.protocol}://${req.get("host")}/nota/${imageName}`;
+    // production 
+    // const imageUrl = `https://api.lisnasehat.online/nota/${imageName}`;
     // Find Principle by principle_id
     const principle = await Principle.findByPk(req.body.principle_id);
     if (!principle) {
@@ -53,7 +61,10 @@ exports.create = async (req, res) => {
       jml_obat: req.body.jml_obat,
       disc_principle: req.body.disc_principle,
       harga: req.body.harga,
-      jatuh_tempo: req.body.jatuh_tempo
+      jatuh_tempo: req.body.jatuh_tempo,
+      expired: req.body.expired,
+      gambar_nota: imageName,
+      urlGambar: imageUrl,
     };
 
     if (req.body.createdAt != '') {
@@ -239,7 +250,7 @@ exports.findAllJatuhTempo = async (req, res) => {
         ],
       },
       order: [
-        ['jatuh_tempo', 'DESC']  
+        ['jatuh_tempo', 'DESC']
       ]
     };
 
@@ -340,7 +351,6 @@ exports.findAllDelete = async (req, res) => {
 };
 
 // Find a single admin with an id
-
 exports.findOne = async (req, res) => {
   try {
     const id = req.params.id;
@@ -367,18 +377,6 @@ exports.findOne = async (req, res) => {
       });
     }
 
-    // Find Principle by principle_id
-    const principle = await Principle.findByPk(req.body.principle_id);
-    if (!principle) {
-      return res.status(404).send({ message: "Principle not found!" });
-    }
-
-    // Find Obat by obat_id
-    const obat = await Obat.findByPk(req.body.obat_id);
-    if (!obat) {
-      return res.status(404).send({ message: "Obat not found!" });
-    }
-
     res.send(transaksi_obat_masuk);
   } catch (error) {
     console.error(error);
@@ -388,34 +386,66 @@ exports.findOne = async (req, res) => {
   }
 };
 
+
 // Update a transaksi_obat_masuk by the id in the request
+
 exports.update = async (req, res) => {
   const id = req.params.id;
+  const file = req.file;
 
-  TransaksiObatMasuk.update(req.body, {
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "transaksi_obat_masuk was updated successfully.",
-        });
-      } else {
-        res.send({
-          message: `Cannot update transaksi_obat_masuk with id=${id}. Maybe transaksi_obat_masuk was not found or req.body is empty!`,
-        });
+  try {
+    let TransaksiObatMasukData = req.body;
+
+    // Temukan obat yang akan diupdate
+    const transaksi_obat_masuk = await TransaksiObatMasuk.findByPk(id);
+
+    if (!transaksi_obat_masuk) {
+      return res.status(404).send({ message: `TransaksiObatMasuk dengan id=${id} tidak ditemukan` });
+    }
+
+    if (file) {
+      const imageName = file.filename;
+      // local
+      const imageUrl = `${req.protocol}://${req.get("host")}/nota/${file.filename}`;
+      // production
+      // const imageUrl = `https://api.lisnasehat.online/nota/${file.filename}`;
+
+      TransaksiObatMasukData = {
+        ...TransaksiObatMasukData,
+        gambar_nota: imageName,
+        urlGambar: imageUrl,
+      };
+
+      const filePath = path.join(__dirname, '../../public/assets/images/nota/', transaksi_obat_masuk.gambar_nota);
+
+      try {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted the file under ${filePath}`);
+      } catch (err) {
+        console.log("An error occurred: ", err.message);
       }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Error updating transaksi_obat_masuk with id=" + id,
-      });
+    } else {
+      TransaksiObatMasukData = {
+        ...TransaksiObatMasukData,
+        gambar_nota: transaksi_obat_masuk.gambar_nota,
+        urlGambar: transaksi_obat_masuk.urlGambar,
+      };
+    }
+
+    // Perbarui data transaksi_obat_masuk dengan data baru, termasuk data yang tidak berubah
+    await transaksi_obat_masuk.update(TransaksiObatMasukData);
+
+    res.send({
+      message: "TransaksiObatMasuk berhasil diubah.",
     });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
 };
 
 exports.restore = async (req, res) => {
   const id = req.params.id;
-  
+
   try {
     const transaksi_obat_masuk = await TransaksiObatMasuk.findByPk(id, {
       paranoid: false
@@ -445,43 +475,38 @@ exports.restore = async (req, res) => {
 };
 
 // Delete a transaksi_obat_masuk with the specified id in the request
+
 exports.delete = async (req, res) => {
   const id = req.params.id;
 
-  const transaksi_obat_masuk = await TransaksiObatMasuk.findByPk(id);
+  try {
+    const transaksi_obat_masuk = await TransaksiObatMasuk.findByPk(id);
 
-  const obat = await Obat.findByPk(transaksi_obat_masuk.obat_id);
+    if (!transaksi_obat_masuk) {
+      return res.status(404).send({ message: `TransaksiObatMasuk dengan id=${id} tidak ditemukan` });
+    }
 
-  const stokObat = obat.stok;
-  const jml_obat = transaksi_obat_masuk.jml_obat;
+    const filePath = path.join(__dirname, '../../public/assets/images/nota/', transaksi_obat_masuk.gambar_nota);
 
-  if (stokObat - jml_obat < 0) {
+    try {
+      fs.unlinkSync(filePath);
+      console.log(`Deleted the file under ${filePath}`);
+    } catch (err) {
+      console.log("An error occurred: ", err.message);
+    }
+
+    await TransaksiObatMasuk.destroy({
+      where: { id: id },
+    });
+
+    res.send({
+      message: "TransaksiObatMasuk berhasil dihapus.",
+    });
+  } catch (error) {
     res.status(500).send({
-      message: "Tidak bisa menghapus, Stok obat habis!",
+      message: "Could not delete TransaksiObatMasuk with id=" + id,
     });
-  } else {
-    obat.update({ stok: stokObat - jml_obat });
   }
-
-  TransaksiObatMasuk.destroy({
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "transaksi_obat_masuk was deleted successfully!",
-        });
-      } else {
-        res.send({
-          message: `Cannot delete transaksi_obat_masuk with id=${id}. Maybe transaksi_obat_masuk was not found!`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Could not delete transaksi_obat_masuk with id=" + id,
-      });
-    });
 };
 
 // Delete all transaksi_obat_masuks from the database.
