@@ -1,6 +1,7 @@
 const db = require("../models");
 
 const Barangdistributor = db.barangdistributors;
+// const PenjualPembuat = db.penjualpembuat;
 const Satuan = db.satuan;
 const Op = db.Sequelize.Op;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
@@ -10,14 +11,9 @@ const multer = require("multer");
 // Create and Save a new Barangdistributor
 exports.create = async (req, res) => {
   try {
-  
-
-    // Ambil URL gambar pertama jika tersedia
-
     // Buat objek Barangdistributor dengan URL gambar yang telah diproses
     const barangdistributor = {
-      nama_barang: req.body.nama_barang,
-     
+      nama_distributor: req.body.nama_distributor,
     };
 
     // Simpan Barangdistributor ke database menggunakan metode yang sesuai
@@ -35,7 +31,7 @@ exports.create = async (req, res) => {
 
 const barangdistributorSerializer = new JSONAPISerializer("barangdistributor", {
   attributes: [
-    "nama_barang",
+    "nama_distributor",
   ],
   keyForAttribute: "underscore_case",
 });
@@ -53,25 +49,41 @@ exports.findAll = async (req, res) => {
     const searchQuery = {
       where: {
         [Op.or]: [
-          { nama_barang: { [Op.like]: `%${keyword}%` } },
-          
+          { nama_distributor: { [Op.like]: `%${keyword}%` } },
         ],
       },
       limit: pageSize,
       offset: offset,
-     
     };
 
     // Mengambil data barangdistributor dengan pagination dan pencarian menggunakan Sequelize
     const barangdistributors = await Barangdistributor.findAll(searchQuery);
+    const penjualPembuats = await db.penjualpembuat.findAll({
+      include: [
+        {
+          model: Barangdistributor,
+          attributes: ["nama_distributor"],
+        },
+      ],
+    });
+    
+    // Menambahkan properti penjualpembuat pada setiap barangdistributor
+    const barangdistributorsWithPenjualPembuat = barangdistributors.map(barangdistributor => {
+      const penjualPembuat = penjualPembuats.find(pp => pp.distributor_id === barangdistributor.id);
+      return {
+        ...barangdistributor.toJSON(),
+        penjualpembuat: penjualPembuat ? [penjualPembuat] : []
+      };
+    });
+
     const totalCount = await Barangdistributor.count(searchQuery);
 
     const totalPages = Math.ceil(totalCount / pageSize);
-    const barangdistributor =
-      barangdistributorSerializer.serialize(barangdistributors);
+    // const barangdistributor =
+    //   barangdistributorSerializer.serialize(barangdistributors);
 
     res.send({
-      data: barangdistributors,
+      data: barangdistributorsWithPenjualPembuat,
       currentPage: page,
       totalPages: totalPages,
       pageSize: pageSize,
@@ -121,16 +133,13 @@ exports.findOne = async (req, res) => {
 // Update a Barangdistributor by the id in the request
 exports.update = async (req, res) => {
   const id = req.params.id;
-  
 
   try {
     let barangdistributorData = req.body;
 
-   
-
     // Temukan barangdistributor yang akan diupdate
     const barangdistributor = await Barangdistributor.findByPk(id);
-   
+
     // Perbarui data barangdistributor dengan data baru, termasuk data yang tidak berubah
     await barangdistributor.update(barangdistributorData);
 
