@@ -1,5 +1,6 @@
 const db = require("../models");
 const PenjualPembuat = db.penjualpembuat;
+const Principle = db.principle;
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
@@ -23,9 +24,18 @@ exports.create = async (req, res) => {
       principle_id: req.body.principle_id,
     };
 
-    // Save penjualPembuat to the database
+    // Simpan penjualPembuat ke database
     const createdPenjualPembuat = await PenjualPembuat.create(penjualPembuat);
+
+    // Temukan data principle berdasarkan principle_id dari createdPenjualPembuat
+    // const principle = await Principle.findByPk(createdPenjualPembuat.principle_id);
+
+    // let newArray = [];
+    // newArray.push({ createdPenjualPembuat, nama_instansi: principle.nama_instasi });
+
+    // Kirimkan respons dengan array yang berisi objek createdPenjualPembuat
     res.send(createdPenjualPembuat);
+    
   } catch (error) {
     console.error(error);
     res
@@ -70,7 +80,7 @@ exports.findAll = async (req, res) => {
     const totalPages = Math.ceil(totalCount / pageSize);
 
     const penjualPembuatData = penjualPembuatSerializer.serialize(penjualPembuat);
-    
+
     // Kirim response dengan data JSON dan informasi pagination
     res.send({
       data: penjualPembuatData,
@@ -89,10 +99,10 @@ exports.findAll = async (req, res) => {
 
 exports.findOne = async (req, res) => {
   const id = req.params.id;
-  
+
   try {
     const penjualPembuat = await PenjualPembuat.findByPk(id);
-    
+
     if (!penjualPembuat) {
       return res.status(404).send({
         message: `Cannot find penjualPembuat with id=${id}.`,
@@ -100,7 +110,7 @@ exports.findOne = async (req, res) => {
     }
 
     const serializedPenjualPembuat = penjualPembuatSerializer.serialize(penjualPembuat);
-    
+
     res.send(serializedPenjualPembuat);
   } catch (error) {
     console.error(error);
@@ -136,26 +146,27 @@ exports.update = async (req, res) => {
 };
 
 // Delete a penjualPembuat with the specified id in the request
+// Delete a Penjualpembuat with the specified id in the request
 exports.delete = (req, res) => {
   const id = req.params.id;
 
   PenjualPembuat.destroy({
-    where: { id: id },
+    where: { id: id }
   })
-    .then((num) => {
+    .then(num => {
       if (num == 1) {
         res.send({
-          message: "penjualPembuat was deleted successfully!",
+          message: "Penjualpembuat was deleted successfully!"
         });
       } else {
         res.send({
-          message: `Cannot delete penjualPembuat with id=${id}. Maybe penjualPembuat was not found!`,
+          message: `Cannot delete Penjualpembuat with id=${id}. Maybe Penjualpembuat was not found!`
         });
       }
     })
-    .catch((err) => {
+    .catch(err => {
       res.status(500).send({
-        message: "Could not delete penjualPembuat with id=" + id,
+        message: "Could not delete Penjualpembuat with id=" + id
       });
     });
 };

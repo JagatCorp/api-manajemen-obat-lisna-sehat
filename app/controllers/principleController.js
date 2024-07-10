@@ -1,5 +1,7 @@
 const db = require("../models");
 const Principle = db.principle;
+const Penjualpembuat = db.penjualpembuat;
+const Barangdistributor = db.barangdistributors;
 // const Op = db.Sequelize.Op;
 // const { Op } = require("sequelize");
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
@@ -31,7 +33,7 @@ exports.create = async (req, res) => {
 };
 
 const principleSerializer = new JSONAPISerializer('principle', {
-  attributes: ['nama_instansi'],
+  attributes: ['nama_instansi', 'penjualpembuat'],
   keyForAttribute: 'underscore_case',
 });
 
@@ -58,14 +60,38 @@ exports.findAll = async (req, res) => {
     };
 
     const principle = await Principle.findAll(searchQuery);
+
+    const penjualPembuats = await Penjualpembuat.findAll({
+      include: [
+        {
+          model: Barangdistributor,
+          attributes: ["nama_distributor"],
+        },
+      ],
+    });
+
+    
+    
+    // Menambahkan properti penjualpembuat pada setiap principle
+    const principleWithPenjualPembuat = principle.map(principle => {
+      const penjualPembuatList = penjualPembuats.filter(pp => pp.principle_id === principle.id);
+      return {
+        ...principle.toJSON(),
+        penjualpembuat: penjualPembuatList
+      };
+    });
+
+    
     const totalCount = await Principle.count(searchQuery);
     // Menghitung total jumlah principle
     // const totalCount = await Principle.count();
-
+    
     // Menghitung total jumlah halaman berdasarkan ukuran halaman
     const totalPages = Math.ceil(totalCount / pageSize);
-
-    const principleData = principleSerializer.serialize(principle);
+    
+    // const principleData = principleSerializer.serialize(principle);
+    const principleData = principleSerializer.serialize(principleWithPenjualPembuat);
+    // return res.status(500).send({ message: principleData });
     
     // Kirim response dengan data JSON dan informasi pagination
     res.send({

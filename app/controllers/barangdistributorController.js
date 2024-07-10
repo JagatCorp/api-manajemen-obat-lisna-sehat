@@ -1,7 +1,8 @@
 const db = require("../models");
 
 const Barangdistributor = db.barangdistributors;
-// const PenjualPembuat = db.penjualpembuat;
+const Penjualpembuat = db.penjualpembuat;
+const Principle = db.principle;
 const Satuan = db.satuan;
 const Op = db.Sequelize.Op;
 const JSONAPISerializer = require("jsonapi-serializer").Serializer;
@@ -36,6 +37,7 @@ const barangdistributorSerializer = new JSONAPISerializer("barangdistributor", {
   keyForAttribute: "underscore_case",
 });
 
+
 // Retrieve all Barangdistributors from the database.
 exports.findAll = async (req, res) => {
   try {
@@ -45,7 +47,7 @@ exports.findAll = async (req, res) => {
 
     const keyword = req.query.keyword || "";
 
-    // pencarian
+    // Pencarian
     const searchQuery = {
       where: {
         [Op.or]: [
@@ -58,29 +60,40 @@ exports.findAll = async (req, res) => {
 
     // Mengambil data barangdistributor dengan pagination dan pencarian menggunakan Sequelize
     const barangdistributors = await Barangdistributor.findAll(searchQuery);
-    const penjualPembuats = await db.penjualpembuat.findAll({
+    // return res.status(500).send({ message: penjualPembuats });
+
+    // Mengambil data penjualpembuat dengan asosiasi principle
+    const penjualPembuats = await Penjualpembuat.findAll({
       include: [
         {
-          model: Barangdistributor,
-          attributes: ["nama_distributor"],
+          model: Principle,
+          attributes: ["nama_instansi"],
         },
       ],
     });
-    
+
+
     // Menambahkan properti penjualpembuat pada setiap barangdistributor
     const barangdistributorsWithPenjualPembuat = barangdistributors.map(barangdistributor => {
-      const penjualPembuat = penjualPembuats.find(pp => pp.distributor_id === barangdistributor.id);
+      const penjualPembuatList = penjualPembuats.filter(pp => pp.distributor_id === barangdistributor.id);
       return {
         ...barangdistributor.toJSON(),
-        penjualpembuat: penjualPembuat ? [penjualPembuat] : []
+        penjualpembuat: penjualPembuatList
       };
     });
 
-    const totalCount = await Barangdistributor.count(searchQuery);
+
+
+    // Total count without limit and offset
+    const totalCount = await Barangdistributor.count({
+      where: {
+        [Op.or]: [
+          { nama_distributor: { [Op.like]: `%${keyword}%` } },
+        ],
+      },
+    });
 
     const totalPages = Math.ceil(totalCount / pageSize);
-    // const barangdistributor =
-    //   barangdistributorSerializer.serialize(barangdistributors);
 
     res.send({
       data: barangdistributorsWithPenjualPembuat,
