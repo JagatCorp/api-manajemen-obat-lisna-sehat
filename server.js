@@ -56,6 +56,7 @@ require("./app/routes/transaksiobatmasuk")(app);
 require("./app/routes/principle")(app);
 require("./app/routes/pembelidistributor")(app);
 require("./app/routes/transaksidistributor")(app);
+require("./app/routes/penjualpembuat")(app);
 // set port, listen for requests
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
