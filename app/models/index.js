@@ -36,10 +36,7 @@ db.transaksi_obat_masuk = require("./TransaksiObatMasuk.js")(
 db.principle = require("./Principle.js")(sequelize, Sequelize);
 db.administrators = require("./Administrators.js")(sequelize, Sequelize);
 db.barangdistributors = require("./Barangdistributor.js")(sequelize, Sequelize);
-db.pembelidistributors = require("./Pembelidistributor.js")(
-  sequelize,
-  Sequelize
-);
+
 db.transaksidistributors = require("./Transaksidistributor.js")(
   sequelize,
   Sequelize
@@ -61,8 +58,8 @@ db.penjualpembuat.belongsTo(db.principle, { foreignKey: "principle_id" });
 db.transaksi_obat_keluar.belongsTo(db.obat, { foreignKey: "obat_id" });
 db.transaksi_obat_masuk.belongsTo(db.obat, { foreignKey: "obat_id" });
 
-// relasi table transaksi obat masuk dan masuk ke principle
-db.transaksi_obat_masuk.belongsTo(db.principle, { foreignKey: "principle_id" });
+// relasi table transaksi obat masuk dan masuk ke distributor
+db.transaksi_obat_masuk.belongsTo(db.barangdistributors, { foreignKey: "barangdistributor_id" });
 
 
 // relasi table transaksidistributors ke barangdistributors

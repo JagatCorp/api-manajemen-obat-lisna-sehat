@@ -20,7 +20,7 @@ module.exports = (sequelize, Sequelize) => {
     harga: {
       type: Sequelize.INTEGER,
     },
-    disc_principle: {
+    disc_distributor: {
       type: Sequelize.INTEGER,
     },
     jml_obat: {

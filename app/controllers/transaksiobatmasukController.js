@@ -1,6 +1,6 @@
 const db = require("../models");
 const TransaksiObatMasuk = db.transaksi_obat_masuk;
-const Principle = db.principle;
+const Barangdistributor = db.barangdistributors;
 const Obat = db.obat;
 
 // const Op = db.Sequelize.Op;
@@ -18,11 +18,11 @@ exports.create = async (req, res) => {
     if (
       // !req.body.stok_obat_sebelum ||
       // !req.body.stok_obat_sesudah ||
-      // !req.body.principle_id ||
+      // !req.body.barangdistributor_id ||
       // !req.body.obat_id ||
       // !req.body.jml_obat ||
       // !req.body.harga ||
-      !req.body.disc_principle
+      !req.body.disc_distributor
     ) {
       return res.status(400).send({ message: "Data is required!" });
     }
@@ -33,10 +33,10 @@ exports.create = async (req, res) => {
      const imageUrl = `${req.protocol}://${req.get("host")}/nota/${imageName}`;
     // production 
     // const imageUrl = `https://api.lisnasehat.online/nota/${imageName}`;
-    // Find Principle by principle_id
-    const principle = await Principle.findByPk(req.body.principle_id);
+    // Find Barangdistributor by barangdistributor_id
+    const principle = await Barangdistributor.findByPk(req.body.barangdistributor_id);
     if (!principle) {
-      return res.status(404).send({ message: "Principle not found!" });
+      return res.status(404).send({ message: "Barangdistributor not found!" });
     }
     // return res.status(404).send({ message: req.body.createdAt == '' });
 
@@ -49,17 +49,17 @@ exports.create = async (req, res) => {
     const stok_obat_sebelum = obat.stok;
     const stok_obat_sesudah = parseInt(obat.stok) + parseInt(req.body.jml_obat);
 
-    obat.update({ stok: stok_obat_sesudah, harga: req.body.harga, disc_principle: req.body.disc_principle });
+    obat.update({ stok: stok_obat_sesudah, harga: req.body.harga, disc_distributor: req.body.disc_distributor });
 
 
     // Create transaksi_obat_masuk object with layanan_id
     const transaksi_obat_masuk = {
       stok_obat_sebelum: stok_obat_sebelum,
       stok_obat_sesudah: stok_obat_sesudah,
-      principle_id: req.body.principle_id,
+      barangdistributor_id: req.body.barangdistributor_id,
       obat_id: req.body.obat_id,
       jml_obat: req.body.jml_obat,
-      disc_principle: req.body.disc_principle,
+      disc_distributor: req.body.disc_distributor,
       harga: req.body.harga,
       jatuh_tempo: req.body.jatuh_tempo,
       expired: req.body.expired,
@@ -108,8 +108,8 @@ exports.findAll = async (req, res) => {
           attributes: ["nama_obat"],
         },
         {
-          model: Principle,
-          attributes: ["nama_instansi"],
+          model: Barangdistributor,
+          attributes: ["nama_distributor"],
         },
       ],
       attributes: {
@@ -174,8 +174,8 @@ exports.findAllHariini = async (req, res) => {
           attributes: ["nama_obat", "urlGambar"],
         },
         {
-          model: Principle,
-          attributes: ["nama_instansi"],
+          model: Barangdistributor,
+          attributes: ["nama_distributor"],
         },
       ],
       attributes: {
@@ -227,7 +227,7 @@ exports.findAllJatuhTempo = async (req, res) => {
         ...(keyword && {
           [Op.or]: [
             { '$Obat.nama_obat$': { [Op.like]: `%${keyword}%` } },
-            { '$Principle.nama_instansi$': { [Op.like]: `%${keyword}%` } }
+            { '$Barangdistributor.nama_distributor$': { [Op.like]: `%${keyword}%` } }
           ]
         })
       },
@@ -239,8 +239,8 @@ exports.findAllJatuhTempo = async (req, res) => {
           attributes: ["nama_obat", "urlGambar"],
         },
         {
-          model: Principle,
-          attributes: ["nama_instansi"],
+          model: Barangdistributor,
+          attributes: ["nama_distributor"],
         },
       ],
       attributes: {
@@ -260,7 +260,7 @@ exports.findAllJatuhTempo = async (req, res) => {
         ...(keyword && {
           [Op.or]: [
             { '$Obat.nama_obat$': { [Op.like]: `%${keyword}%` } },
-            { '$Principle.nama_instansi$': { [Op.like]: `%${keyword}%` } }
+            { '$Barangdistributor.nama_distributor$': { [Op.like]: `%${keyword}%` } }
           ]
         })
       }
@@ -314,8 +314,8 @@ exports.findAllDelete = async (req, res) => {
           attributes: ["nama_obat"],
         },
         {
-          model: Principle,
-          attributes: ["nama_instansi"],
+          model: Barangdistributor,
+          attributes: ["nama_distributor"],
         },
       ],
       attributes: {
@@ -362,8 +362,8 @@ exports.findOne = async (req, res) => {
           attributes: ["nama_obat"],
         },
         {
-          model: Principle,
-          attributes: ["nama_instansi"],
+          model: Barangdistributor,
+          attributes: ["nama_distributor"],
         },
       ],
       attributes: {

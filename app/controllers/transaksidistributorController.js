@@ -138,7 +138,7 @@ exports.findAll = async (req, res) => {
       include: [
         {
           model: Barangdistributor,
-          attributes: ["nama_barang", "urlGambar"],
+          attributes: ["nama_distributor"],
         },
       ],
       // attributes: {
@@ -180,7 +180,7 @@ exports.export = async (req, res) => {
       include: [
         {
           model: Barangdistributor,
-          attributes: ["nama_barang", "urlGambar"],
+          attributes: ["nama_distributor"],
         },
       ],
       attributes: {
@@ -201,7 +201,7 @@ exports.export = async (req, res) => {
     const datatransaksidistributor = await Promise.all(barang_distributor.map(async (transaksiDistributor, index) => {
       return {
         no: ++index,
-        'Nama Barang': transaksiDistributor.barangdistributor.nama_barang,
+        'Nama Barang': transaksiDistributor.barangdistributor.nama_distributor,
         'Jumlah Barang': transaksiDistributor.jml_barang,
         'Harga': transaksiDistributor.harga,
         'Nama Pembeli': transaksiDistributor.nama_pembeli,  
@@ -246,7 +246,7 @@ exports.deleteList = async (req, res) => {
       include: [
         {
           model: Barangdistributor,
-          attributes: ["nama_barang", "urlGambar"],
+          attributes: ["nama_distributor"],
         },
       ],
     };
@@ -296,7 +296,7 @@ exports.findOne = async (req, res) => {
       include: [
         {
           model: Barangdistributor,
-          attributes: ["nama_barang", "urlGambar"],
+          attributes: ["nama_distributor"],
         },
       ],
       attributes: {

@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const db = require("../models");
-const Pasien = db.pasien;
-const Dokter = db.dokter;
 const Administrator = db.administrators;
 const { JWT_SECRET } = require("../configs/database"); // Mengimpor nilai JWT_SECRET dari file konfigurasi
 
@@ -63,60 +61,21 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    let user = await Pasien.findOne({
-      where: { username: username },
-    });
-
-    if (!user) {
-      user = await Dokter.findOne({
-        where: { username: username },
-      });
-
-      if (!user) {
-        user = await Administrator.findOne({
-          where: { username: username },
-        });
-
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-          return res.status(401).json({ message: "Invalid username or password" });
-        }
-
-        const role = "lisAd";
-        const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
-          expiresIn: "1h",
-        });
-
-        return res.json({ token, id: user.id, role: role });
-      }
-
-      if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: "Invalid username or password" });
-      }
-
-      const role = "lisDo";
-      const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
-        expiresIn: "1h",
-      });
-
-      return res.json({ token, id: user.id, urlGambar: user.urlGambar, role: role });
-    }
+    const user = await Administrator.findOne({ where: { username } });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    const role = "lisPa";
-    const token = jwt.sign({ id: user.id, role: role }, JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const role = "lisAd";
+    const token = jwt.sign({ id: user.id, role }, JWT_SECRET, { expiresIn: "1h" });
 
-    return res.json({ token, id: user.id, role: role });
+    return res.json({ token, id: user.id, role });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 // Fungsi logout
 exports.logout = (req, res) => {
   try {
